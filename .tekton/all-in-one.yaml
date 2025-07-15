@@ -1,0 +1,260 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: trivy-all-in-one
+  annotations:
+    pipelinesascode.tekton.dev/on-comment: "^(/allinone)$"
+    pipelinesascode.tekton.dev/on-cel-expression: |-
+      (
+        source_branch.matches("^(main|master|release-.*)$") ||
+        !last_commit_title.contains("Auto-commit")
+      ) && ((
+        event == "push" && (
+          source_branch.matches("^(main|master|release-.*)$") ||
+          target_branch.matches("^(main|master|release-.*)$") ||
+          target_branch.startsWith("refs/tags/")
+        )
+      ) || (
+        event == "pull_request" && (
+          target_branch.matches("^(main|master|release-.*)$")
+        )
+      ))
+    pipelinesascode.tekton.dev/max-keep-runs: "20"
+spec:
+  timeouts:
+    pipeline: 3h
+    tasks: 1h
+
+  params:
+    - name: git-url
+      value: "{{ repo_url }}"
+    - name: git-revision
+      value: "{{ source_branch }}"
+    - name: git-commit
+      value: "{{ revision }}"
+
+  pipelineSpec:
+    description: The pipeline is used to combine multiple pipeline templates
+    params:
+      - name: git-url
+        description: Repository URL to clone from.
+        type: string
+      - name: git-revision
+        description: Revision to checkout. (branch, tag, sha, ref, etc...)
+        type: string
+      - name: git-commit
+        description: Commit sha used in this build
+        default: ""
+      - name: go-environments
+        type: array
+        default:
+          - GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - GOMAXPROCS=4
+          - GOFLAGS=-buildvcs=false
+          - CGO_ENABLED=0
+      - name: trivy-args
+        type: array
+        default:
+          - image
+          - --scanners
+          - vuln
+          # - --ignore-unfixed
+          # - --severity MEDIUM,HIGH,CRITICAL
+          - --skip-db-update=false
+          - --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db
+          - --skip-java-db-update=false
+          - --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db
+          - --exit-code=1
+
+#    results:
+#      - name: releases-url
+#        type: array
+#        value: $(tasks.result.results.array-result[*])
+#        description: Target value and release artifacts URL
+
+    tasks:
+      - name: git-clone
+        timeout: 30m
+        retries: 3
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: git-clone
+            - name: version
+              value: "0.9"
+
+        params:
+          - name: url
+            value: $(params.git-url)
+          - name: revision
+            value: $(params.git-revision)
+
+        workspaces:
+          - name: output
+            workspace: source
+          - name: basic-auth
+            workspace: basic-auth
+
+      - name: unit-test
+        timeout: 60m
+        retries: 0
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: run-script
+            - name: version
+              value: "0.1"
+
+        params:
+          - name: script
+            value: |
+              go install tool
+              mage test:unit
+        workspaces:
+          - name: source
+            workspace: source
+
+      - name: integration-test
+        timeout: 60m
+        retries: 0
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: run-script
+            - name: version
+              value: "0.1"
+
+        params:
+          - name: script
+            value: |
+              go install tool
+              mage test:integration
+        workspaces:
+          - name: source
+            workspace: source
+#      - name: result
+#        runAfter:
+#          - build-catalog-image
+#        timeout: 60m
+#        retries: 1
+#        taskRef:
+#          resolver: hub
+#          params:
+#            - name: catalog
+#              value: catalog
+#            - name: kind
+#              value: task
+#            - name: name
+#              value: run-script
+#            - name: version
+#              value: "0.1"
+#
+#        params:
+#          - name: image
+#            value: build-harbor.alauda.cn/devops/nonroot/kustomize:latest
+#          - name: imagePullPolicy
+#            value: Always
+#          - name: script
+#            value: |
+#              echo "⚙️ ===> artifacts in values.yaml format"
+#              cat values.yaml
+#
+#              echo "⚙️ ===> release artifacts"
+#              export NEXUS_USERNAME=`cat $(workspaces.secret.path)/username`
+#              export NEXUS_PASSWORD=`cat $(workspaces.secret.path)/password`
+#              export OUTPUT_FILE=$(results.array-result.path)
+#              export BRANCH=$(params.git-revision)
+#              export COMMIT_ID=$(params.git-commit)
+#              export REPO=catalog
+#              build-releases.sh
+#              cat $OUTPUT_FILE
+#
+#        workspaces:
+#          - name: source
+#            workspace: source
+#          - name: secret
+#            workspace: nexus-auth
+
+    workspaces:
+      - name: source
+        description: Workspace for shared code source
+      - name: dockerconfig
+        description: >-
+          Workspace for Docker configuration files, such as `config.json` or `.dockerconfigjson`.
+          This is optional and is used for authentication when pushing images to the registry.
+        # 该配置会触发 tekton pipeline 的 bug 导致 controller panic，所以先都设置为必填的。
+        # 详见: https://github.com/tektoncd/pipeline/issues/8561
+        # optional: true
+      # - name: cache
+      #   description: Trivy image cache (optional)
+      #   optional: true
+      - name: basic-auth
+        # optional: true
+        description: >
+          A Workspace containing a .gitconfig and .git-credentials file. These
+          will be copied to the user's home before any git commands are run. Any
+          other files in this Workspace are ignored. It is strongly recommended
+          to use ssh-directory over basic-auth whenever possible and to bind a
+          Secret to this Workspace over other volume types.
+      - name: gitversion-config
+        # optional: true
+        description: >
+          A Workspace containing a gitversion-config file. This file is used to set the git version.
+
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 1Gi
+    - name: dockerconfig
+      secret:
+        secretName: build-harbor.kauto.docfj
+    # This secret will be replaced by the pac controller
+    - name: basic-auth
+      secret:
+        secretName: "{{ git_auth_secret }}"
+    - name: nexus-auth
+      secret:
+        secretName: build-nexus.kauto
+    - name: gitversion-config
+      configMap:
+        name: gitversion-config
+    - name: sonar-credentials
+      secret:
+        secretName: sonarqube-credentials
+    - name: go-cache
+      persistentVolumeClaim:
+        claimName: build-cache-v4
+    - name: signkey
+      secret:
+        secretName: signing-secrets
+
+  taskRunTemplate:
+    # 让所有任务都以非 root 用户运行。
+    podTemplate:
+      securityContext:
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: "OnRootMismatch"
