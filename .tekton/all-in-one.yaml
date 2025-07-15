@@ -119,6 +119,8 @@ spec:
               value: "0.1"
 
         params:
+          - name: image
+            value: registry.alauda.cn:60080/devops/nonroot/builder-go:latest
           - name: script
             value: |
               go install tool
@@ -146,6 +148,8 @@ spec:
               value: "0.1"
 
         params:
+          - name: image
+            value: registry.alauda.cn:60080/devops/nonroot/builder-go:latest
           - name: script
             value: |
               go install tool
