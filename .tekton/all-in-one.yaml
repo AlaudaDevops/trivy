@@ -252,7 +252,7 @@ spec:
             - ReadWriteMany
           resources:
             requests:
-              storage: 1Gi
+              storage: 5Gi
     - name: dockerconfig
       secret:
         secretName: build-harbor.kauto.docfj
