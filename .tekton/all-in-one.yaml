@@ -138,6 +138,8 @@ spec:
         workspaces:
           - name: source
             workspace: source
+          - name: cache
+            workspace: go-cache
 
       - name: integration-test
         timeout: 60m
@@ -167,6 +169,8 @@ spec:
         workspaces:
           - name: source
             workspace: source
+          - name: cache
+            workspace: go-cache
 #      - name: result
 #        runAfter:
 #          - build-catalog-image
@@ -235,6 +239,10 @@ spec:
         # optional: true
         description: >
           A Workspace containing a gitversion-config file. This file is used to set the git version.
+      - name: go-cache
+        persistentVolumeClaim:
+          claimName: build-cache
+        subPath: golang-nonroot
 
   workspaces:
     - name: source
