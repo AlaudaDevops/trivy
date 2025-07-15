@@ -122,8 +122,8 @@ spec:
           - name: command
             value: |
               set -ex
-              go install tool || echo "tool install failed"
-              mage test:unit || echo "unit test failed"
+              go install tool
+              mage test:unit
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
         workspaces:
@@ -154,8 +154,8 @@ spec:
           - name: command
             value: |
               set -ex
-              go install tool || echo "tool install failed"
-              mage test:integration || echo "integration test failed"
+              go install tool
+              mage test:integration
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
         workspaces:
