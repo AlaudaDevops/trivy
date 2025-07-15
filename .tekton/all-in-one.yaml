@@ -120,22 +120,21 @@ spec:
           resolver: hub
           params:
             - name: catalog
-              value: catalog
+              value: extras
             - name: kind
               value: task
             - name: name
-              value: run-script
+              value: golang-test
             - name: version
-              value: "0.1"
+              value: '0.3'
 
         params:
-          - name: image
-            value: registry.alauda.cn:60080/devops/nonroot/builder-go:latest
-          - name: script
+          - name: command
             value: |
-              go env
               go install tool
               mage test:unit
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
         workspaces:
           - name: source
             workspace: source
@@ -150,22 +149,21 @@ spec:
           resolver: hub
           params:
             - name: catalog
-              value: catalog
+              value: extras
             - name: kind
               value: task
             - name: name
-              value: run-script
+              value: golang-test
             - name: version
-              value: "0.1"
+              value: '0.3'
 
         params:
-          - name: image
-            value: registry.alauda.cn:60080/devops/nonroot/builder-go:latest
-          - name: script
+          - name: command
             value: |
-              go env
               go install tool
               mage test:integration
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
         workspaces:
           - name: source
             workspace: source
