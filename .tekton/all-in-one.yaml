@@ -6,17 +6,17 @@ metadata:
     pipelinesascode.tekton.dev/on-comment: "^(/allinone)$"
     pipelinesascode.tekton.dev/on-cel-expression: |-
       (
-        source_branch.matches("^(main|master|release-.*)$") ||
+        source_branch.matches("^(main|master|release-.*|alauda-.*)$") ||
         !last_commit_title.contains("Auto-commit")
       ) && ((
         event == "push" && (
-          source_branch.matches("^(main|master|release-.*)$") ||
-          target_branch.matches("^(main|master|release-.*)$") ||
+          source_branch.matches("^(main|master|release-.*|alauda-.*)$") ||
+          target_branch.matches("^(main|master|release-.*|alauda-.*)$") ||
           target_branch.startsWith("refs/tags/")
         )
       ) || (
         event == "pull_request" && (
-          target_branch.matches("^(main|master|release-.*)$")
+          target_branch.matches("^(main|master|release-.*|alauda-.*)$")
         )
       ))
     pipelinesascode.tekton.dev/max-keep-runs: "20"
@@ -103,6 +103,8 @@ spec:
       - name: unit-test
         timeout: 60m
         retries: 0
+        runAfter:
+          - git-clone
 
         taskRef:
           resolver: hub
@@ -128,6 +130,8 @@ spec:
       - name: integration-test
         timeout: 60m
         retries: 0
+        runAfter:
+          - git-clone
 
         taskRef:
           resolver: hub
