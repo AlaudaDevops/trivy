@@ -20,6 +20,16 @@ metadata:
         )
       ))
     pipelinesascode.tekton.dev/max-keep-runs: "20"
+    pip.tekton.dev/runspec.golang-check: |
+      taskRunSpecs:
+        - pipelineTaskName: go-test
+          computeResources:
+            limits:
+              cpu: '4'
+              memory: 4Gi
+            requests:
+              cpu: '2'
+              memory: 2Gi
 spec:
   timeouts:
     pipeline: 3h
@@ -123,6 +133,7 @@ spec:
             value: registry.alauda.cn:60080/devops/nonroot/builder-go:latest
           - name: script
             value: |
+              go env
               go install tool
               mage test:unit
         workspaces:
@@ -152,6 +163,7 @@ spec:
             value: registry.alauda.cn:60080/devops/nonroot/builder-go:latest
           - name: script
             value: |
+              go env
               go install tool
               mage test:integration
         workspaces:
