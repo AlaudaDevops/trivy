@@ -100,11 +100,48 @@ spec:
           - name: basic-auth
             workspace: basic-auth
 
-      - name: unit-test
+      - name: integration-test
         timeout: 60m
         retries: 0
         runAfter:
           - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: alauda
+            - name: type
+              value: tekton
+            - name: kind
+              value: task
+            - name: name
+              value: docker-in-docker
+            - name: version
+              value: "0.2"
+
+        params:
+          - name: tools-image
+            value: "registry.alauda.cn:60080/devops/nonroot/builder-go:latest"
+          - name: command
+            value: |
+              set -ex
+              export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+              go install tool
+              mage test:integration
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: unit-test
+        timeout: 60m
+        retries: 0
+
+        # mage can not run coucurrently
+        runAfter:
+          - integration-test
 
         taskRef:
           resolver: hub
@@ -132,37 +169,7 @@ spec:
           - name: cache
             workspace: go-cache
 
-      - name: integration-test
-        timeout: 60m
-        retries: 0
-        runAfter:
-          - git-clone
 
-        taskRef:
-          resolver: hub
-          params:
-            - name: catalog
-              value: extras
-            - name: kind
-              value: task
-            - name: name
-              value: golang-test
-            - name: version
-              value: '0.3'
-
-        params:
-          - name: command
-            value: |
-              set -ex
-              go install tool
-              mage test:integration
-          - name: GOPROXY
-            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
-        workspaces:
-          - name: source
-            workspace: source
-          - name: cache
-            workspace: go-cache
 #      - name: result
 #        runAfter:
 #          - build-catalog-image
