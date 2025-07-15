@@ -121,6 +121,7 @@ spec:
         params:
           - name: command
             value: |
+              set -ex
               go install tool || echo "tool install failed"
               mage test:unit || echo "unit test failed"
           - name: GOPROXY
@@ -152,6 +153,7 @@ spec:
         params:
           - name: command
             value: |
+              set -ex
               go install tool || echo "tool install failed"
               mage test:integration || echo "integration test failed"
           - name: GOPROXY
