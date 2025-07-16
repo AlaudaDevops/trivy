@@ -151,18 +151,12 @@ spec:
               set -ex
 
               # bind go cache
-              if [ "$(workspaces.modcache.bound)" == "true" ]; then
-                gocache=$(workspaces.modcache.path)/gocache
-                gomodcache=$(workspaces.modcache.path)/gomod
-
-                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
-                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
-              else
-                tempdir=$(mktemp -d)
-                export GOCACHE=$tempdir/gocache
-                export GOMODCACHE=$tempdir/gomod
               
-              fi
+              tempdir=$(mktemp -d)
+              export GOCACHE=$tempdir/gocache
+              export GOMODCACHE=$tempdir/gomod
+              
+               
 
               # bind testing image cache
               if [ "$(workspaces.cache.bound)" == "true" ]; then
