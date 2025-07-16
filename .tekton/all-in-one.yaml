@@ -137,6 +137,15 @@ spec:
                 ln -s ${cache_dir} ${image_dir}
               fi
               
+              docker_version=28.1.1 
+              docker_arch="x86_64"
+              echo "=> ✅ Install Docker CLI"
+              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz && \
+              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C /usr/bin &&  \
+              rm docker-${docker_version}.tgz
+              
+              ls /usr/bin
+              
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
               go install tool
               mage test:integration

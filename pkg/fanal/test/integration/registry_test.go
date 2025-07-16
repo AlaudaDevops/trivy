@@ -119,26 +119,26 @@ func TestTLSRegistry(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		/*		{
-				name:      "happy path with docker login",
-				imageName: testutil.ImageName("", "alpine-310", ""),
-				imageFile: "../../../../integration/testdata/fixtures/images/alpine-310.tar.gz",
-				option: types.ImageOptions{
-					RegistryOptions: types.RegistryOptions{
-						Insecure: true,
-					},
+		{
+			name:      "happy path with docker login",
+			imageName: testutil.ImageName("", "alpine-310", ""),
+			imageFile: "../../../../integration/testdata/fixtures/images/alpine-310.tar.gz",
+			option: types.ImageOptions{
+				RegistryOptions: types.RegistryOptions{
+					Insecure: true,
 				},
-				login: true,
-				expectedOS: types.OS{
-					Name:   "3.10.2",
-					Family: "alpine",
-				},
-				expectedRepo: types.Repository{
-					Family:  "alpine",
-					Release: "3.10",
-				},
-				wantErr: false,
-			},*/
+			},
+			login: true,
+			expectedOS: types.OS{
+				Name:   "3.10.2",
+				Family: "alpine",
+			},
+			expectedRepo: types.Repository{
+				Family:  "alpine",
+				Release: "3.10",
+			},
+			wantErr: false,
+		},
 		{
 			name:      "sad path: tls verify",
 			imageName: testutil.ImageName("", "alpine-310", ""),
