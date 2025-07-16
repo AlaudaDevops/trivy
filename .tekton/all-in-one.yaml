@@ -115,6 +115,9 @@ spec:
           - name: command
             value: |
               set -ex
+              tempdir=$(mktemp -d)
+              export GOCACHE=$tempdir/gocache
+              export GOMODCACHE=$tempdir/gomod
               go install tool
               mage test:unit
           - name: GOPROXY
