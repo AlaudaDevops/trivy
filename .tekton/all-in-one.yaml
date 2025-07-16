@@ -315,8 +315,9 @@ spec:
         params:
           - name: script
             value: |
-              NEXUS_URL="https://build-nexus.alauda.cn/repository/alauda/devops"   
-              UPLOAD_PATH="trivy-cli/$(params.git-revision)"                      
+              NEXUS_URL="https://build-nexus.alauda.cn"
+              REPOSITORY="alauda/devops/trivy-cli"
+              UPLOAD_PATH="$(params.git-revision)"
               USERNAME=`cat $(workspaces.secret.path)/username`      
               PASSWORD=`cat $(workspaces.secret.path)/password`
               FILES=("trivy-$(params.artifact-version)-amd64" "trivy-$(params.artifact-version)-arm64")
