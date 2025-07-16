@@ -200,6 +200,75 @@ spec:
           - name: cache
             workspace: trivy-test-image-cache
 
+      - name: build-amd64
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-build
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: command
+            value: |
+              go build --ldflags "-w -s -extldflags '-static'" -o trivy-0.62.1-amd64 cmd/trivy/main.go
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - name: GOARCH
+            value: amd64
+          - name: CGO_ENABLED
+            value: "0"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: build-arm64
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-build
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: command
+            value: |
+              go build --ldflags "-w -s -extldflags '-static'" -o trivy-0.62.1-arm64 cmd/trivy/main.go
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - name: GOARCH
+            value: arm64
+          - name: CGO_ENABLED
+            value: "0"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
 
 
 
