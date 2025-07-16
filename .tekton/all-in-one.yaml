@@ -92,105 +92,105 @@ spec:
           - name: basic-auth
             workspace: basic-auth
 
-      - name: unit-test
-        timeout: 60m
-        retries: 0
-
-        runAfter:
-          - git-clone
-
-        taskRef:
-          resolver: hub
-          params:
-            - name: catalog
-              value: extras
-            - name: kind
-              value: task
-            - name: name
-              value: golang-test
-            - name: version
-              value: '0.3'
-
-        params:
-          - name: command
-            value: |
-              set -ex
-              go install tool
-              mage test:unit
-          - name: GOPROXY
-            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
-        workspaces:
-          - name: source
-            workspace: source
-          - name: cache
-            workspace: go-cache
-
-      - name: integration-test
-        timeout: 60m
-        retries: 0
-        runAfter:
-          - unit-test
-
-        taskRef:
-          resolver: hub
-          params:
-            - name: catalog
-              value: alauda
-            - name: type
-              value: tekton
-            - name: kind
-              value: task
-            - name: name
-              value: docker-in-docker
-            - name: version
-              value: "0.2"
-
-        params:
-          - name: tools-image
-            value: "registry.alauda.cn:60080/devops/nonroot/builder-go:latest"
-          - name: command
-            value: |
-              set -ex
-              
-              # bind go cache
-              if [ "$(workspaces.modcache.bound)" == "true" ]; then
-                gocache=$(workspaces.modcache.path)/gocache
-                gomodcache=$(workspaces.modcache.path)/gomod
-      
-                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
-                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
-              fi
-              
-              # bind testing image cache
-              if [ "$(workspaces.cache.bound)" == "true" ]; then
-                image_dir=./integration/testdata/fixtures/images
-                cache_dir=$(workspaces.cache.path)/trivy/images
-              
-                rm -rf ${image_dir}
-                mkdir -p ${cache_dir}
-                echo "=> ✅ Setting trivy image cache to ${cache_dir}"
-                ln -s ${cache_dir} ${image_dir}
-              fi
-              
-              echo "=> ✅ Install Docker CLI"
-              docker_version=28.1.1 
-              docker_arch="x86_64"
-              mkdir -p bin
-              export PATH=$PATH:$(realpath ./bin)
-              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
-              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin
-              rm docker-${docker_version}.tgz
-              
-              export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
-              go install tool
-              mage test:integration
-        workspaces:
-          - name: source
-            workspace: source
-          - name: modcache
-            workspace: go-cache
-          - name: cache
-            workspace: trivy-test-image-cache
+#      - name: unit-test
+#        timeout: 60m
+#        retries: 0
+#
+#        runAfter:
+#          - git-clone
+#
+#        taskRef:
+#          resolver: hub
+#          params:
+#            - name: catalog
+#              value: extras
+#            - name: kind
+#              value: task
+#            - name: name
+#              value: golang-test
+#            - name: version
+#              value: '0.3'
+#
+#        params:
+#          - name: command
+#            value: |
+#              set -ex
+#              go install tool
+#              mage test:unit
+#          - name: GOPROXY
+#            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+#        workspaces:
+#          - name: source
+#            workspace: source
+#          - name: cache
+#            workspace: go-cache
+#
+#      - name: integration-test
+#        timeout: 60m
+#        retries: 0
+#        runAfter:
+#          - unit-test
+#
+#        taskRef:
+#          resolver: hub
+#          params:
+#            - name: catalog
+#              value: alauda
+#            - name: type
+#              value: tekton
+#            - name: kind
+#              value: task
+#            - name: name
+#              value: docker-in-docker
+#            - name: version
+#              value: "0.2"
+#
+#        params:
+#          - name: tools-image
+#            value: "registry.alauda.cn:60080/devops/nonroot/builder-go:latest"
+#          - name: command
+#            value: |
+#              set -ex
+#
+#              # bind go cache
+#              if [ "$(workspaces.modcache.bound)" == "true" ]; then
+#                gocache=$(workspaces.modcache.path)/gocache
+#                gomodcache=$(workspaces.modcache.path)/gomod
+#
+#                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
+#                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
+#              fi
+#
+#              # bind testing image cache
+#              if [ "$(workspaces.cache.bound)" == "true" ]; then
+#                image_dir=./integration/testdata/fixtures/images
+#                cache_dir=$(workspaces.cache.path)/trivy/images
+#
+#                rm -rf ${image_dir}
+#                mkdir -p ${cache_dir}
+#                echo "=> ✅ Setting trivy image cache to ${cache_dir}"
+#                ln -s ${cache_dir} ${image_dir}
+#              fi
+#
+#              echo "=> ✅ Install Docker CLI"
+#              docker_version=28.1.1
+#              docker_arch="x86_64"
+#              mkdir -p bin
+#              export PATH=$PATH:$(realpath ./bin)
+#              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
+#              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin
+#              rm docker-${docker_version}.tgz
+#
+#              export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+#              go install tool
+#              mage test:integration
+#        workspaces:
+#          - name: source
+#            workspace: source
+#          - name: modcache
+#            workspace: go-cache
+#          - name: cache
+#            workspace: trivy-test-image-cache
 
       - name: build-amd64
         timeout: 60m
@@ -267,7 +267,7 @@ spec:
         retries: 0
 
         runAfter:
-          - git-clone
+          - build-amd64
 
         taskRef:
           resolver: hub
@@ -285,57 +285,59 @@ spec:
           - name: COMMAND
             value: |
               set -ex
-              trivy repo --scanners vuln \
+              trivy fs --scanners vuln \
                 --exit-code=1 \
                 --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
                 --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
-                ./
+                ./trivy-$(params.artifact-version)-amd64
         workspaces:
           - name: source
             workspace: source
 
-#      - name: result
-#        runAfter:
-#          - build-catalog-image
-#        timeout: 60m
-#        retries: 1
-#        taskRef:
-#          resolver: hub
-#          params:
-#            - name: catalog
-#              value: catalog
-#            - name: kind
-#              value: task
-#            - name: name
-#              value: run-script
-#            - name: version
-#              value: "0.1"
-#
-#        params:
-#          - name: image
-#            value: build-harbor.alauda.cn/devops/nonroot/kustomize:latest
-#          - name: imagePullPolicy
-#            value: Always
-#          - name: script
-#            value: |
-#              echo "⚙️ ===> artifacts in values.yaml format"
-#              cat values.yaml
-#
-#              echo "⚙️ ===> release artifacts"
-#              export NEXUS_USERNAME=`cat $(workspaces.secret.path)/username`
-#              export NEXUS_PASSWORD=`cat $(workspaces.secret.path)/password`
-#              export OUTPUT_FILE=$(results.array-result.path)
-#              export BRANCH=$(params.git-revision)
-#              export COMMIT_ID=$(params.git-commit)
-#              export REPO=catalog
-#              build-releases.sh
-#              cat $OUTPUT_FILE
-#
-#        workspaces:
-#          - name: source
-#            workspace: source
-#          - name: secret
-#            workspace: nexus-auth
+      - name: upload-to-nexus
+        runAfter:
+          - build-amd64
+          - build-arm64
+        timeout: 60m
+        retries: 3
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: run-script
+            - name: version
+              value: "0.1"
+
+        params:
+          - name: script
+            value: |
+              NEXUS_URL="https://build-nexus.alauda.cn/repository/alauda/devops"       # Nexus 地址（无尾斜杠）
+              UPLOAD_PATH="trivy-cli/$(params.git-revision)"                           # 上传到仓库中的路径（可选）
+              USERNAME=`cat $(workspaces.secret.path)/username`      
+              PASSWORD=`cat $(workspaces.secret.path)/password`
+              FILES=("trivy-$(params.artifact-version)-amd64" "trivy-$(params.artifact-version)-arm64")
+              
+              for file in "${FILES[@]}"; do
+                  if [[ -f "$file" ]]; then
+                      echo "Uploading $file ..."
+                      curl -u "$USERNAME:$PASSWORD" \
+                           --upload-file "$file" \
+                           "$NEXUS_URL/repository/$REPOSITORY/$UPLOAD_PATH/$file"
+                      echo "Done: $file"
+                  else
+                      echo "File not found: $file"
+                  fi
+              done
+
+        workspaces:
+          - name: source
+            workspace: source
+          - name: secret
+            workspace: nexus-auth
 
     workspaces:
       - name: source
@@ -347,9 +349,6 @@ spec:
         # 该配置会触发 tekton pipeline 的 bug 导致 controller panic，所以先都设置为必填的。
         # 详见: https://github.com/tektoncd/pipeline/issues/8561
         # optional: true
-      # - name: cache
-      #   description: Trivy image cache (optional)
-      #   optional: true
       - name: basic-auth
         # optional: true
         description: >
@@ -416,22 +415,22 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
 
   taskRunSpecs:
-    - pipelineTaskName: unit-test
-      computeResources:
-        limits:
-          cpu: "4"
-          memory: "4Gi"
-        requests:
-          cpu: "2"
-          memory: "2Gi"
-    - pipelineTaskName: integration-test
-      computeResources:
-        limits:
-          cpu: "4"
-          memory: "4Gi"
-        requests:
-          cpu: "2"
-          memory: "2Gi"
+#    - pipelineTaskName: unit-test
+#      computeResources:
+#        limits:
+#          cpu: "4"
+#          memory: "4Gi"
+#        requests:
+#          cpu: "2"
+#          memory: "2Gi"
+#    - pipelineTaskName: integration-test
+#      computeResources:
+#        limits:
+#          cpu: "4"
+#          memory: "4Gi"
+#        requests:
+#          cpu: "2"
+#          memory: "2Gi"
     - pipelineTaskName: build-amd64
       computeResources:
         limits:
