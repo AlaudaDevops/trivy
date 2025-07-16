@@ -122,8 +122,6 @@ spec:
         workspaces:
           - name: source
             workspace: source
-          - name: cache
-            workspace: go-cache
 
       - name: integration-test
         timeout: 60m
@@ -187,8 +185,6 @@ spec:
         workspaces:
           - name: source
             workspace: source
-          - name: modcache
-            workspace: go-cache
           - name: cache
             workspace: trivy-test-image-cache
 
@@ -224,8 +220,6 @@ spec:
         workspaces:
           - name: source
             workspace: source
-          - name: cache
-            workspace: go-cache
 
       - name: build-arm64
         timeout: 60m
@@ -259,8 +253,6 @@ spec:
         workspaces:
           - name: source
             workspace: source
-          - name: cache
-            workspace: go-cache
 
       - name: trivy-scan
         timeout: 60m
