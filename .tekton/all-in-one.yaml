@@ -270,7 +270,71 @@ spec:
           - name: cache
             workspace: go-cache
 
+      - name: scan-amd64
+        timeout: 60m
+        retries: 0
 
+        runAfter:
+          - build-amd64
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: trivy-scanner
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: COMMAND
+            value: |
+              set -ex
+              trivy fs --scanners vuln \
+                --exit-code=1 \
+                --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
+                --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
+                ./trivy-0.62.1-amd64
+        workspaces:
+          - name: source
+            workspace: source
+
+
+
+      - name: scan-arm64
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - build-arm64
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: trivy-scanner
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: COMMAND
+            value: |
+              set -ex
+              trivy fs --scanners vuln \
+                --exit-code=1 \
+                --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
+                --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
+                ./trivy-0.62.1-arm64
+        workspaces:
+          - name: source
+            workspace: source
 
 #      - name: result
 #        runAfter:
@@ -397,16 +461,32 @@ spec:
     - pipelineTaskName: unit-test
       computeResources:
         limits:
-          cpu: "8"
-          memory: "8Gi"
-        requests:
           cpu: "4"
           memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
     - pipelineTaskName: integration-test
       computeResources:
         limits:
-          cpu: "8"
-          memory: "8Gi"
-        requests:
           cpu: "4"
           memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
+    - pipelineTaskName: build-amd64
+      computeResources:
+        limits:
+          cpu: "4"
+          memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
+    - pipelineTaskName: build-arm64
+      computeResources:
+        limits:
+          cpu: "4"
+          memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
