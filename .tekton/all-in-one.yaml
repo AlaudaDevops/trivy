@@ -126,14 +126,36 @@ spec:
           - name: command
             value: |
               set -ex
+              
+              # bind go cache
+              if [ "$(workspaces.modcache.bound)" == "true" ]; then
+                gocache=$(workspaces.modcache.path)/gocache
+                gomodcache=$(workspaces.modcache.path)/gomod
+      
+                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
+                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
+              fi
+              
+              # bind testing image cache
+              if [ "$(workspaces.cache.bound)" == "true" ]; then
+                cp -nv $(workspaces.modcache.path)/*.tar.gz ./integration/testdata/fixtures/images/
+              fi
+              
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
               go install tool
               mage test:integration
+              
+              # make cache
+              if [ "$(workspaces.cache.bound)" == "true" ]; then
+                cp -nv ./integration/testdata/fixtures/images/*.tar.gz $(workspaces.cache.path)/fixtures/images/
+              fi
         workspaces:
           - name: source
             workspace: source
-          - name: cache
+          - name: modcache
             workspace: go-cache
+          - name: cache
+            workspace: trivy-test-image-cache
 
       - name: unit-test
         timeout: 60m
@@ -242,6 +264,10 @@ spec:
         persistentVolumeClaim:
           claimName: build-cache
         subPath: golang-nonroot
+      - name: trivy-test-image-cache
+        persistentVolumeClaim:
+          claimName: trivy-test-image-cache
+        subPath: trivy-test-image
 
   workspaces:
     - name: source
@@ -271,6 +297,9 @@ spec:
     - name: go-cache
       persistentVolumeClaim:
         claimName: build-cache-v4
+    - name: trivy-test-image-cache
+      persistentVolumeClaim:
+        claimName: trivy-test-image-cache
     - name: signkey
       secret:
         secretName: signing-secrets
