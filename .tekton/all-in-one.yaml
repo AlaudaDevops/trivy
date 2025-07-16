@@ -416,22 +416,22 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
 
   taskRunSpecs:
-#    - pipelineTaskName: unit-test
-#      computeResources:
-#        limits:
-#          cpu: "4"
-#          memory: "4Gi"
-#        requests:
-#          cpu: "2"
-#          memory: "2Gi"
-#    - pipelineTaskName: integration-test
-#      computeResources:
-#        limits:
-#          cpu: "4"
-#          memory: "4Gi"
-#        requests:
-#          cpu: "2"
-#          memory: "2Gi"
+    - pipelineTaskName: unit-test
+      computeResources:
+        limits:
+          cpu: "4"
+          memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
+    - pipelineTaskName: integration-test
+      computeResources:
+        limits:
+          cpu: "4"
+          memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
     - pipelineTaskName: build-amd64
       computeResources:
         limits:
