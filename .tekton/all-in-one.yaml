@@ -157,6 +157,11 @@ spec:
 
                 echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
                 export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
+              else
+                tempdir=$(mktemp -d)
+                export GOCACHE=$tempdir/gocache
+                export GOMODCACHE=$tempdir/gomod
+              
               fi
 
               # bind testing image cache
@@ -210,6 +215,9 @@ spec:
         params:
           - name: command
             value: |
+              tempdir=$(mktemp -d)
+              export GOCACHE=$tempdir/gocache
+              export GOMODCACHE=$tempdir/gomod
               go build -x -v --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-amd64 cmd/trivy/main.go
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
@@ -243,6 +251,9 @@ spec:
         params:
           - name: command
             value: |
+              tempdir=$(mktemp -d)
+              export GOCACHE=$tempdir/gocache
+              export GOMODCACHE=$tempdir/gomod
               go build -x -v --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-arm64 cmd/trivy/main.go
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
