@@ -138,9 +138,13 @@ spec:
               
               # bind testing image cache
               if [ "$(workspaces.cache.bound)" == "true" ]; then
-                rm -rf ./integration/testdata/fixtures/images/
-                mkdir -p $(workspaces.cache.path)/trivy/images
-                ln -s $(workspaces.cache.path)/trivy/images ./integration/testdata/fixtures/images
+                image_dir=./integration/testdata/fixtures/images
+                cache_dir=$(workspaces.cache.path)/trivy/images
+              
+                rm -rf ${image_dir}
+                mkdir -p ${cache_dir}
+                echo "=> ✅ Setting trivy image cache to ${cache_dir}"
+                ln -s ${cache_dir} ${image_dir}
               fi
               
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
@@ -301,14 +305,14 @@ spec:
       secret:
         secretName: signing-secrets
 
-  taskRunTemplate:
-    # 让所有任务都以非 root 用户运行。
-    podTemplate:
-      securityContext:
-        runAsUser: 65532
-        runAsGroup: 65532
-        fsGroup: 65532
-        fsGroupChangePolicy: "OnRootMismatch"
+#  taskRunTemplate:
+#    # 让所有任务都以非 root 用户运行。
+#    podTemplate:
+#      securityContext:
+#        runAsUser: 65532
+#        runAsGroup: 65532
+#        fsGroup: 65532
+#        fsGroupChangePolicy: "OnRootMismatch"
 
   taskRunSpecs:
     - pipelineTaskName: unit-test
