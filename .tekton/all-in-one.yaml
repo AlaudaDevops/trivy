@@ -138,17 +138,14 @@ spec:
               
               # bind testing image cache
               if [ "$(workspaces.cache.bound)" == "true" ]; then
-                cp -nv $(workspaces.modcache.path)/*.tar.gz ./integration/testdata/fixtures/images/
+                rm -rf ./integration/testdata/fixtures/images/
+                mkdir -p $(workspaces.cache.path)/trivy/images
+                ln -s $(workspaces.cache.path)/trivy/images ./integration/testdata/fixtures/images
               fi
               
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
               go install tool
               mage test:integration
-              
-              # make cache
-              if [ "$(workspaces.cache.bound)" == "true" ]; then
-                cp -nv ./integration/testdata/fixtures/images/*.tar.gz $(workspaces.cache.path)/fixtures/images/
-              fi
         workspaces:
           - name: source
             workspace: source
