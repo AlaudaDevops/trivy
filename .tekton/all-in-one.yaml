@@ -214,7 +214,7 @@ spec:
         params:
           - name: command
             value: |
-              go build --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-amd64 cmd/trivy/main.go
+              go build -x -v --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-amd64 cmd/trivy/main.go
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
           - name: GOARCH
@@ -249,7 +249,7 @@ spec:
         params:
           - name: command
             value: |
-              go build --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-arm64 cmd/trivy/main.go
+              go build -x -v --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-arm64 cmd/trivy/main.go
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
           - name: GOARCH
@@ -315,8 +315,8 @@ spec:
         params:
           - name: script
             value: |
-              NEXUS_URL="https://build-nexus.alauda.cn/repository/alauda/devops"       # Nexus 地址（无尾斜杠）
-              UPLOAD_PATH="trivy-cli/$(params.git-revision)"                           # 上传到仓库中的路径（可选）
+              NEXUS_URL="https://build-nexus.alauda.cn/repository/alauda/devops"   
+              UPLOAD_PATH="trivy-cli/$(params.git-revision)"                      
               USERNAME=`cat $(workspaces.secret.path)/username`      
               PASSWORD=`cat $(workspaces.secret.path)/password`
               FILES=("trivy-$(params.artifact-version)-amd64" "trivy-$(params.artifact-version)-arm64")
