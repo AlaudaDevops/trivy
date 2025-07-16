@@ -140,11 +140,13 @@ spec:
               docker_version=28.1.1 
               docker_arch="x86_64"
               echo "=> ✅ Install Docker CLI"
+              mkdir bin
+              export PATH=$PATH:$(realpath ./bin)
               wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz && \
-              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C /usr/bin &&  \
+              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin &&  \
               rm docker-${docker_version}.tgz
               
-              ls /usr/bin
+              ls ./bin
               
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
               go install tool
