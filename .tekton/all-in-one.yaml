@@ -92,105 +92,105 @@ spec:
           - name: basic-auth
             workspace: basic-auth
 
-#      - name: unit-test
-#        timeout: 60m
-#        retries: 0
-#
-#        runAfter:
-#          - git-clone
-#
-#        taskRef:
-#          resolver: hub
-#          params:
-#            - name: catalog
-#              value: extras
-#            - name: kind
-#              value: task
-#            - name: name
-#              value: golang-test
-#            - name: version
-#              value: '0.3'
-#
-#        params:
-#          - name: command
-#            value: |
-#              set -ex
-#              go install tool
-#              mage test:unit
-#          - name: GOPROXY
-#            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
-#        workspaces:
-#          - name: source
-#            workspace: source
-#          - name: cache
-#            workspace: go-cache
-#
-#      - name: integration-test
-#        timeout: 60m
-#        retries: 0
-#        runAfter:
-#          - unit-test
-#
-#        taskRef:
-#          resolver: hub
-#          params:
-#            - name: catalog
-#              value: alauda
-#            - name: type
-#              value: tekton
-#            - name: kind
-#              value: task
-#            - name: name
-#              value: docker-in-docker
-#            - name: version
-#              value: "0.2"
-#
-#        params:
-#          - name: tools-image
-#            value: "registry.alauda.cn:60080/devops/nonroot/builder-go:latest"
-#          - name: command
-#            value: |
-#              set -ex
-#
-#              # bind go cache
-#              if [ "$(workspaces.modcache.bound)" == "true" ]; then
-#                gocache=$(workspaces.modcache.path)/gocache
-#                gomodcache=$(workspaces.modcache.path)/gomod
-#
-#                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
-#                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
-#              fi
-#
-#              # bind testing image cache
-#              if [ "$(workspaces.cache.bound)" == "true" ]; then
-#                image_dir=./integration/testdata/fixtures/images
-#                cache_dir=$(workspaces.cache.path)/trivy/images
-#
-#                rm -rf ${image_dir}
-#                mkdir -p ${cache_dir}
-#                echo "=> ✅ Setting trivy image cache to ${cache_dir}"
-#                ln -s ${cache_dir} ${image_dir}
-#              fi
-#
-#              echo "=> ✅ Install Docker CLI"
-#              docker_version=28.1.1
-#              docker_arch="x86_64"
-#              mkdir -p bin
-#              export PATH=$PATH:$(realpath ./bin)
-#              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
-#              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin
-#              rm docker-${docker_version}.tgz
-#
-#              export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
-#              go install tool
-#              mage test:integration
-#        workspaces:
-#          - name: source
-#            workspace: source
-#          - name: modcache
-#            workspace: go-cache
-#          - name: cache
-#            workspace: trivy-test-image-cache
+      - name: unit-test
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-test
+            - name: version
+              value: '0.3'
+
+        params:
+          - name: command
+            value: |
+              set -ex
+              go install tool
+              mage test:unit
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: integration-test
+        timeout: 60m
+        retries: 0
+        runAfter:
+          - unit-test
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: alauda
+            - name: type
+              value: tekton
+            - name: kind
+              value: task
+            - name: name
+              value: docker-in-docker
+            - name: version
+              value: "0.2"
+
+        params:
+          - name: tools-image
+            value: "registry.alauda.cn:60080/devops/nonroot/builder-go:latest"
+          - name: command
+            value: |
+              set -ex
+
+              # bind go cache
+              if [ "$(workspaces.modcache.bound)" == "true" ]; then
+                gocache=$(workspaces.modcache.path)/gocache
+                gomodcache=$(workspaces.modcache.path)/gomod
+
+                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
+                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
+              fi
+
+              # bind testing image cache
+              if [ "$(workspaces.cache.bound)" == "true" ]; then
+                image_dir=./integration/testdata/fixtures/images
+                cache_dir=$(workspaces.cache.path)/trivy/images
+
+                rm -rf ${image_dir}
+                mkdir -p ${cache_dir}
+                echo "=> ✅ Setting trivy image cache to ${cache_dir}"
+                ln -s ${cache_dir} ${image_dir}
+              fi
+
+              echo "=> ✅ Install Docker CLI"
+              docker_version=28.1.1
+              docker_arch="x86_64"
+              mkdir -p bin
+              export PATH=$PATH:$(realpath ./bin)
+              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
+              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin
+              rm docker-${docker_version}.tgz
+
+              export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+              go install tool
+              mage test:integration
+        workspaces:
+          - name: source
+            workspace: source
+          - name: modcache
+            workspace: go-cache
+          - name: cache
+            workspace: trivy-test-image-cache
 
       - name: build-amd64
         timeout: 60m
@@ -285,7 +285,7 @@ spec:
           - name: COMMAND
             value: |
               set -ex
-              trivy fs --scanners vuln \
+              trivy rootfs --scanners vuln \
                 --exit-code=1 \
                 --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
                 --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
