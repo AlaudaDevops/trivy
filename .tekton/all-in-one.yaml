@@ -32,6 +32,8 @@ spec:
       value: "{{ source_branch }}"
     - name: git-commit
       value: "{{ revision }}"
+    - name: artifact-version
+      value: "0.62.1"
 
   pipelineSpec:
     description: The pipeline is used to combine multiple pipeline templates
@@ -52,19 +54,9 @@ spec:
           - GOMAXPROCS=4
           - GOFLAGS=-buildvcs=false
           - CGO_ENABLED=0
-      - name: trivy-args
-        type: array
-        default:
-          - image
-          - --scanners
-          - vuln
-          # - --ignore-unfixed
-          # - --severity MEDIUM,HIGH,CRITICAL
-          - --skip-db-update=false
-          - --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db
-          - --skip-java-db-update=false
-          - --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db
-          - --exit-code=1
+      - name: artifact-version
+        description: The artifact version.
+        type: string
 
 #    results:
 #      - name: releases-url
@@ -222,7 +214,7 @@ spec:
         params:
           - name: command
             value: |
-              go build --ldflags "-w -s -extldflags '-static'" -o trivy-0.62.1-amd64 cmd/trivy/main.go
+              go build --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-amd64 cmd/trivy/main.go
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
           - name: GOARCH
@@ -257,7 +249,7 @@ spec:
         params:
           - name: command
             value: |
-              go build --ldflags "-w -s -extldflags '-static'" -o trivy-0.62.1-arm64 cmd/trivy/main.go
+              go build --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-arm64 cmd/trivy/main.go
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
           - name: GOARCH
@@ -270,12 +262,12 @@ spec:
           - name: cache
             workspace: go-cache
 
-      - name: scan-amd64
+      - name: trivy-scan
         timeout: 60m
         retries: 0
 
         runAfter:
-          - build-amd64
+          - git-clone
 
         taskRef:
           resolver: hub
@@ -293,45 +285,11 @@ spec:
           - name: COMMAND
             value: |
               set -ex
-              trivy fs --scanners vuln \
+              trivy repo --scanners vuln \
                 --exit-code=1 \
                 --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
                 --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
-                ./trivy-0.62.1-amd64
-        workspaces:
-          - name: source
-            workspace: source
-
-
-
-      - name: scan-arm64
-        timeout: 60m
-        retries: 0
-
-        runAfter:
-          - build-arm64
-
-        taskRef:
-          resolver: hub
-          params:
-            - name: catalog
-              value: catalog
-            - name: kind
-              value: task
-            - name: name
-              value: trivy-scanner
-            - name: version
-              value: '0.4'
-
-        params:
-          - name: COMMAND
-            value: |
-              set -ex
-              trivy fs --scanners vuln \
-                --exit-code=1 \
-                --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
-                --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
-                ./trivy-0.62.1-arm64
+                ./
         workspaces:
           - name: source
             workspace: source
