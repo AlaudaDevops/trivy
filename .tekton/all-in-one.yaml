@@ -20,6 +20,7 @@ metadata:
         )
       ))
     pipelinesascode.tekton.dev/max-keep-runs: "20"
+    pipelinesascode.tekton.dev/task: "[.tekton/docker-in-docker.yaml]"
 spec:
   timeouts:
     pipeline: 3h
@@ -107,18 +108,7 @@ spec:
           - git-clone
 
         taskRef:
-          resolver: hub
-          params:
-            - name: catalog
-              value: alauda
-            - name: type
-              value: tekton
-            - name: kind
-              value: task
-            - name: name
-              value: docker-in-docker
-            - name: version
-              value: "0.2"
+          name: docker-in-docker
 
         params:
           - name: tools-image
@@ -305,14 +295,14 @@ spec:
       secret:
         secretName: signing-secrets
 
-#  taskRunTemplate:
-#    # 让所有任务都以非 root 用户运行。
-#    podTemplate:
-#      securityContext:
-#        runAsUser: 65532
-#        runAsGroup: 65532
-#        fsGroup: 65532
-#        fsGroupChangePolicy: "OnRootMismatch"
+  taskRunTemplate:
+    # 让所有任务都以非 root 用户运行。
+    podTemplate:
+      securityContext:
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: "OnRootMismatch"
 
   taskRunSpecs:
     - pipelineTaskName: unit-test
