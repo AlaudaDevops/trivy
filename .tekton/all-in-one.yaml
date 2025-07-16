@@ -20,7 +20,6 @@ metadata:
         )
       ))
     pipelinesascode.tekton.dev/max-keep-runs: "20"
-    pipelinesascode.tekton.dev/task: "[.tekton/docker-in-docker.yaml]"
 spec:
   timeouts:
     pipeline: 3h
@@ -101,14 +100,58 @@ spec:
           - name: basic-auth
             workspace: basic-auth
 
-      - name: integration-test
+      - name: unit-test
         timeout: 60m
         retries: 0
+
         runAfter:
           - git-clone
 
         taskRef:
-          name: docker-in-docker
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-test
+            - name: version
+              value: '0.3'
+
+        params:
+          - name: command
+            value: |
+              set -ex
+              go install tool
+              mage test:unit
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: integration-test
+        timeout: 60m
+        retries: 0
+        runAfter:
+          - unit-test
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: alauda
+            - name: type
+              value: tekton
+            - name: kind
+              value: task
+            - name: name
+              value: docker-in-docker
+            - name: version
+              value: "0.2"
 
         params:
           - name: tools-image
@@ -137,16 +180,14 @@ spec:
                 ln -s ${cache_dir} ${image_dir}
               fi
               
+              echo "=> ✅ Install Docker CLI"
               docker_version=28.1.1 
               docker_arch="x86_64"
-              echo "=> ✅ Install Docker CLI"
-              mkdir bin
+              mkdir -p bin
               export PATH=$PATH:$(realpath ./bin)
-              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz && \
-              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin &&  \
+              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
+              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin
               rm docker-${docker_version}.tgz
-              
-              ls ./bin
               
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
               go install tool
@@ -159,39 +200,7 @@ spec:
           - name: cache
             workspace: trivy-test-image-cache
 
-      - name: unit-test
-        timeout: 60m
-        retries: 0
 
-        # mage can not run coucurrently
-        runAfter:
-          - integration-test
-
-        taskRef:
-          resolver: hub
-          params:
-            - name: catalog
-              value: extras
-            - name: kind
-              value: task
-            - name: name
-              value: golang-test
-            - name: version
-              value: '0.3'
-
-        params:
-          - name: command
-            value: |
-              set -ex
-              go install tool
-              mage test:unit
-          - name: GOPROXY
-            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
-        workspaces:
-          - name: source
-            workspace: source
-          - name: cache
-            workspace: go-cache
 
 
 #      - name: result
