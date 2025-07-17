@@ -1,7 +1,7 @@
 on:
-  pull_request:
+  push:
     branches:
-      - alauda-v0.62.1
+      - alauda-v*
 jobs:
   release:
     name: alauda-release
@@ -23,6 +23,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: v2.1.0
-          args: release --snapshot -f=goreleaser-alauda.yml
+          args: release -f=goreleaser-alauda.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
