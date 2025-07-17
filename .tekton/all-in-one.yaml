@@ -120,6 +120,9 @@ spec:
               mage test:unit
           - name: GOPROXY
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - name: environments
+            value:
+              - `GOMAXPROCS=8`
         workspaces:
           - name: source
             workspace: source
@@ -208,6 +211,7 @@ spec:
               fi
 
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+              export GOMAXPROCS=8
               go install tool
               mage test:integration
         workspaces:
