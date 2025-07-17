@@ -4,8 +4,8 @@ on:
       - alauda-v0.62.1
 jobs:
   release:
-    name: Release
-    runs-on: ubuntu-latest-m
+    name: alauda-elease
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
