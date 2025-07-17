@@ -3,7 +3,7 @@
   "extends": [
     "github>AlaudaDevops/renovate-config:base"
   ],
-  "baseBranches": ["main", "/^alauda-v.*/"],
+  "baseBranches": ["/^alauda-v.*/"],
   "postUpdateOptions": ["gomodTidy"],
   "assignees": [
     "yzc"
