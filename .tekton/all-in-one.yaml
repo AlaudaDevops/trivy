@@ -122,7 +122,7 @@ spec:
             value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
           - name: environments
             value:
-              - `GOMAXPROCS=8`
+              - "GOMAXPROCS=8"
         workspaces:
           - name: source
             workspace: source
