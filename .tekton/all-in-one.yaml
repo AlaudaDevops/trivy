@@ -239,7 +239,7 @@ spec:
         retries: 0
 
         runAfter:
-          - git-clone
+          - build-amd64
 
         taskRef:
           resolver: hub
@@ -364,8 +364,7 @@ spec:
               USERNAME=`cat $(workspaces.secret.path)/username`      
               PASSWORD=`cat $(workspaces.secret.path)/password`
               FILES=("trivy-$(params.artifact-version)-amd64" "trivy-$(params.artifact-version)-arm64")
-              
-              results=()
+              RESULTS=()
               
               for file in "${FILES[@]}"; do
                   if [[ -f "$file" ]]; then
@@ -374,7 +373,7 @@ spec:
                       curl -u "$USERNAME:$PASSWORD" \
                            --upload-file "$file" \
                            $url
-                      results+=("$url")
+                      RESULTS+=("$url")
                       echo "Done: $file"
                   else
                       echo "File not found: $file"
@@ -382,7 +381,7 @@ spec:
                   fi
               done
               
-              echo ${results[*]} > $(results.array-result.path)
+              echo ${RESULTS[*]} > $(results.array-result.path)
 
         workspaces:
           - name: source
