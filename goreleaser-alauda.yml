@@ -54,4 +54,6 @@ release:
 
     ---
 
-    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+    This release is intended for use only as part of the Alauda product suite. 
+    It is not recommended for use by individuals or teams outside of Alauda. 
+    Any consequences arising from its use are the sole responsibility of the user.

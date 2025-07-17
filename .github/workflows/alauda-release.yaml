@@ -4,7 +4,7 @@ on:
       - alauda-v0.62.1
 jobs:
   release:
-    name: alauda-elease
+    name: alauda-release
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: v2.1.0
-          args: release --snapshot -f=alauda-goreleaser.yml
+          args: release --snapshot -f=goreleaser-alauda.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
