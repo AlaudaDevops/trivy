@@ -1,4 +1,4 @@
-FROM squidfunk/mkdocs-material:9.5.44
+FROM squidfunk/mkdocs-material:9.5.50
 
 # https://squidfunk.github.io/mkdocs-material/getting-started/?h=macros#with-docker-material-for-mkdocs
 
