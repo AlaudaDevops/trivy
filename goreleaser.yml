@@ -108,7 +108,7 @@ nfpms:
 
 archives:
   - id: archive
-    formats: [tar.gz]
+    format: tar.gz
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- if eq .Os "darwin" }}macOS
@@ -130,7 +130,7 @@ archives:
       - contrib/*.tpl
     format_overrides:
       - goos: windows
-        formats: [zip]
+        format: zip
 
 
 brews:
