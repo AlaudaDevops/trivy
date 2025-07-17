@@ -263,7 +263,7 @@ spec:
         retries: 0
 
         runAfter:
-          - build-amd64
+          - git-clone
 
         taskRef:
           resolver: hub
