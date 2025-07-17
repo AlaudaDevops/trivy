@@ -28,7 +28,8 @@ builds:
     binary: alauda-trivy
 
 archives:
-  - formats: [tar.gz]
+  - id: archive
+    formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
