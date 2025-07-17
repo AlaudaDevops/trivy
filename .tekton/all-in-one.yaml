@@ -126,6 +126,39 @@ spec:
           - name: cache
             workspace: go-cache
 
+      - name: prepare-integration-test
+        runAfter:
+          - git-clone
+        timeout: 60m
+        retries: 3
+        params:
+          - name: script
+            value: |
+              tool_dir=./bin
+              
+              echo "=> ✅ Install Docker CLI"
+              docker_version=28.1.1 
+              docker_arch="x86_64"
+              mkdir -p ${tool_dir}
+              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
+              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ${tool_dir}
+              rm docker-${docker_version}.tgz
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: run-script
+            - name: version
+              value: "0.1"
+        workspaces:
+          - name: source
+            workspace: source
+
       - name: integration-test
         timeout: 60m
         retries: 0
@@ -152,12 +185,6 @@ spec:
           - name: command
             value: |
               set -ex
-
-              # bind go cache
-              
-              tempdir=$(mktemp -d)
-              export GOCACHE=$tempdir/gocache
-              export GOMODCACHE=$tempdir/gomod
               
               # bind cache
               if [ "$(workspaces.modcache.bound)" == "true" ]; then
@@ -178,15 +205,6 @@ spec:
                 echo "=> ✅ Setting trivy image cache to ${cache_dir}"
                 ln -s ${cache_dir} ${image_dir}
               fi
-
-              echo "=> ✅ Install Docker CLI"
-              docker_version=28.1.1
-              docker_arch="x86_64"
-              mkdir -p bin
-              export PATH=$PATH:$(realpath ./bin)
-              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
-              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ./bin
-              rm docker-${docker_version}.tgz
 
               export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
               go install tool
@@ -469,19 +487,19 @@ spec:
     - pipelineTaskName: unit-test
       computeResources:
         limits:
+          cpu: "8"
+          memory: "8Gi"
+        requests:
           cpu: "4"
           memory: "4Gi"
-        requests:
-          cpu: "2"
-          memory: "2Gi"
     - pipelineTaskName: integration-test
       computeResources:
         limits:
+          cpu: "8"
+          memory: "8Gi"
+        requests:
           cpu: "4"
           memory: "4Gi"
-        requests:
-          cpu: "2"
-          memory: "2Gi"
     - pipelineTaskName: build-amd64
       computeResources:
         limits:
