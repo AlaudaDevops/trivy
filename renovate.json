@@ -6,6 +6,6 @@
   "baseBranches": ["/^alauda-v.*/"],
   "postUpdateOptions": ["gomodTidy"],
   "assignees": [
-    "yzc"
+    "yuzichen12123"
   ]
 }
