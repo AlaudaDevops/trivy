@@ -97,8 +97,7 @@ spec:
         retries: 0
 
         runAfter:
-          - build-amd64
-          - build-arm64
+          - git-clone
 
         taskRef:
           resolver: hub
@@ -189,6 +188,8 @@ spec:
           - name: command
             value: |
               set -ex
+              
+              export PATH=$PATH:$(realpath ./bin)
               
               # bind cache
               if [ "$(workspaces.modcache.bound)" == "true" ]; then
