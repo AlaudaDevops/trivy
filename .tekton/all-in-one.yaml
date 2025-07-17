@@ -97,7 +97,8 @@ spec:
         retries: 0
 
         runAfter:
-          - git-clone
+          - build-amd64
+          - build-arm64
 
         taskRef:
           resolver: hub
@@ -268,10 +269,10 @@ spec:
           - name: cache
             workspace: go-cache
 
-      - name: trivy-scan
+      - name: trivy-scan-amd64
         timeout: 60m
         retries: 0
-
+        onError: continue
         runAfter:
           - build-amd64
 
@@ -300,9 +301,44 @@ spec:
           - name: source
             workspace: source
 
+      - name: trivy-scan-arm64
+        timeout: 60m
+        retries: 0
+        onError: continue
+        runAfter:
+          - build-arm64
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: trivy-scanner
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: COMMAND
+            value: |
+              set -ex
+              trivy rootfs --scanners vuln \
+                --exit-code=1 \
+                --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
+                --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
+                ./trivy-$(params.artifact-version)-arm64
+        workspaces:
+          - name: source
+            workspace: source
+
       - name: upload-to-nexus
         runAfter:
-          - trivy-scan
+          - build-amd64
+          - build-arm64
+          - trivy-scan-amd64
+          - trivy-scan-arm64
           - integration-test
           - unit-test
         timeout: 60m
@@ -386,7 +422,7 @@ spec:
             - ReadWriteMany
           resources:
             requests:
-              storage: 10Gi
+              storage: 5Gi
     - name: dockerconfig
       secret:
         secretName: build-harbor.kauto.docfj
