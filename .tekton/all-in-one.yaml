@@ -405,7 +405,7 @@ spec:
                   fi
               done
               
-              echo ${RESULTS[*]} > $(results.array-result.path)
+              echo ${RESULTS} > $(results.array-result.path)
 
         workspaces:
           - name: source
