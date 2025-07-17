@@ -26,3 +26,4 @@ jobs:
           args: release --snapshot -f=goreleaser-alauda.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+x
