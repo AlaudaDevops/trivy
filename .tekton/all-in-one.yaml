@@ -164,6 +164,7 @@ spec:
         retries: 0
         runAfter:
           - unit-test
+          - prepare-integration-test
 
         taskRef:
           resolver: hub
