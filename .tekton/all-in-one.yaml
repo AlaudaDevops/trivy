@@ -296,7 +296,6 @@ spec:
       - name: trivy-scan-amd64
         timeout: 60m
         retries: 0
-        onError: continue
         runAfter:
           - build-amd64
 
@@ -328,7 +327,6 @@ spec:
       - name: trivy-scan-arm64
         timeout: 60m
         retries: 0
-        onError: continue
         runAfter:
           - build-arm64
 

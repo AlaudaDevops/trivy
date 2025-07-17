@@ -28,8 +28,5 @@
 
 ## 自动化流水线
 
-- `.github/workflow/test.yaml`: 官方测试，包含单元测试、集成测试等，基于 Github Action 运行
+- `.github/workflow/test.yaml`: 官方测试，包含单元测试、集成测试、构建测试等，基于 Github Action 运行
 - `.tekton/all-in-one.yaml`: pac 流水线，包含编译、测试、漏洞扫描等步骤，基于 Tekton 运行（后续考虑废弃该流水线，仅依靠 Github Action 运行官方测试？）
-
-
-
