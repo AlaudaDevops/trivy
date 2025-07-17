@@ -405,7 +405,13 @@ spec:
                   fi
               done
               
-              echo ${RESULTS} > $(results.array-result.path)
+              JSON_RESULT="[\"${RESULTS[0]}\""
+              for i in "${RESULTS[@]:1}"; do
+                JSON_RESULT+=",\"$i\""
+              done
+              JSON_RESULT+="]"
+              
+              echo "${JSON_RESULT}" > $(results.array-result.path)
 
         workspaces:
           - name: source
