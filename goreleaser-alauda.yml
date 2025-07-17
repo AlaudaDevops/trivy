@@ -16,7 +16,6 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-      - GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
     goos:
       - linux
     goarch:
