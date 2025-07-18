@@ -1,28 +1,16 @@
+name: Release Alauda
+
 on:
   push:
-    branches:
-      - alauda-v*
+    tags:
+      - "v*-alauda-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write  # create releases
+  packages: write  # upload packages
+
 jobs:
-  release:
-    name: alauda-release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.1.6
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: false
-
-      - name: Set up GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: v2.1.0
-          args: release -f=goreleaser-alauda.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release-alauda:
+    name: Release Alauda
+    uses: ./.github/workflows/reusable-release-alauda.yaml
