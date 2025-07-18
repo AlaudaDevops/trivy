@@ -1,0 +1,528 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: trivy-all-in-one
+  annotations:
+    pipelinesascode.tekton.dev/on-comment: "^(/allinone)$"
+    pipelinesascode.tekton.dev/on-cel-expression: |-
+      (
+        source_branch.matches("^(main|master|release-.*|alauda-.*)$") ||
+        !last_commit_title.contains("Auto-commit")
+      ) && ((
+        event == "push" && (
+          source_branch.matches("^(main|master|release-.*|alauda-.*)$") ||
+          target_branch.matches("^(main|master|release-.*|alauda-.*)$") ||
+          target_branch.startsWith("refs/tags/")
+        )
+      ) || (
+        event == "pull_request" && (
+          target_branch.matches("^(main|master|release-.*|alauda-.*)$")
+        )
+      ))
+    pipelinesascode.tekton.dev/max-keep-runs: "20"
+spec:
+  timeouts:
+    pipeline: 3h
+    tasks: 1h
+
+  params:
+    - name: git-url
+      value: "{{ repo_url }}"
+    - name: git-revision
+      value: "{{ source_branch }}"
+    - name: git-commit
+      value: "{{ revision }}"
+    - name: artifact-version
+      value: "0.62.1"
+
+  pipelineSpec:
+    description: The pipeline is used to combine multiple pipeline templates
+    params:
+      - name: git-url
+        description: Repository URL to clone from.
+        type: string
+      - name: git-revision
+        description: Revision to checkout. (branch, tag, sha, ref, etc...)
+        type: string
+      - name: git-commit
+        description: Commit sha used in this build
+        default: ""
+      - name: go-environments
+        type: array
+        default:
+          - GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - GOMAXPROCS=4
+          - GOFLAGS=-buildvcs=false
+          - CGO_ENABLED=0
+      - name: artifact-version
+        description: The artifact version.
+        type: string
+
+    results:
+      - name: releases-url
+        type: array
+        value: $(tasks.upload-to-nexus.results.array-result[*])
+        description: Target value and release artifacts URL
+
+    tasks:
+      - name: git-clone
+        timeout: 30m
+        retries: 3
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: git-clone
+            - name: version
+              value: "0.9"
+
+        params:
+          - name: url
+            value: $(params.git-url)
+          - name: revision
+            value: $(params.git-revision)
+
+        workspaces:
+          - name: output
+            workspace: source
+          - name: basic-auth
+            workspace: basic-auth
+
+      - name: unit-test
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-test
+            - name: version
+              value: '0.3'
+
+        params:
+          - name: command
+            value: |
+              set -ex
+              go install tool
+              mage test:unit
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - name: environments
+            value:
+              - "GOMAXPROCS=8"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: prepare-integration-test
+        runAfter:
+          - git-clone
+        timeout: 60m
+        retries: 3
+        params:
+          - name: script
+            value: |
+              tool_dir=./bin
+              
+              echo "=> ✅ Install Docker CLI"
+              docker_version=28.1.1 
+              docker_arch="x86_64"
+              mkdir -p ${tool_dir}
+              wget https://download.docker.com/linux/static/stable/${docker_arch}/docker-${docker_version}.tgz
+              tar --strip-components=1 -xvzf docker-${docker_version}.tgz -C ${tool_dir}
+              rm docker-${docker_version}.tgz
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: run-script
+            - name: version
+              value: "0.1"
+        workspaces:
+          - name: source
+            workspace: source
+
+      - name: integration-test
+        timeout: 60m
+        retries: 0
+        runAfter:
+          - unit-test
+          - prepare-integration-test
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: alauda
+            - name: type
+              value: tekton
+            - name: kind
+              value: task
+            - name: name
+              value: docker-in-docker
+            - name: version
+              value: "0.2"
+
+        params:
+          - name: tools-image
+            value: "registry.alauda.cn:60080/devops/nonroot/builder-go:latest"
+          - name: command
+            value: |
+              set -ex
+              
+              export PATH=$PATH:$(realpath ./bin)
+              
+              # bind cache
+              if [ "$(workspaces.modcache.bound)" == "true" ]; then
+                gocache=$(workspaces.modcache.path)/gocache
+                gomodcache=$(workspaces.modcache.path)/gomod
+                
+                echo "=> ✅ Setting cache env GOCACHE=${gocache} GOMODCACHE=${gomodcache}"
+                export GOCACHE="${gocache}" GOMODCACHE="${gomodcache}"
+              fi
+
+              # bind testing image cache
+              if [ "$(workspaces.cache.bound)" == "true" ]; then
+                image_dir=./integration/testdata/fixtures/images
+                cache_dir=$(workspaces.cache.path)/trivy/images
+
+                rm -rf ${image_dir}
+                mkdir -p ${cache_dir}
+                echo "=> ✅ Setting trivy image cache to ${cache_dir}"
+                ln -s ${cache_dir} ${image_dir}
+              fi
+
+              export GOPROXY=https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+              export GOMAXPROCS=8
+              go install tool
+              mage test:integration
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: trivy-test-image-cache
+          - name: modcache
+            workspace: go-cache
+
+      - name: build-amd64
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-build
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: command
+            value: |
+              go build -x -v --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-amd64 cmd/trivy/main.go
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - name: GOARCH
+            value: amd64
+          - name: CGO_ENABLED
+            value: "0"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: build-arm64
+        timeout: 60m
+        retries: 0
+
+        runAfter:
+          - git-clone
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: extras
+            - name: kind
+              value: task
+            - name: name
+              value: golang-build
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: command
+            value: |
+              go build -x -v --ldflags "-w -s -extldflags '-static'" -o trivy-$(params.artifact-version)-arm64 cmd/trivy/main.go
+          - name: GOPROXY
+            value: https://build-nexus.alauda.cn/repository/golang/,https://goproxy.cn,direct
+          - name: GOARCH
+            value: arm64
+          - name: CGO_ENABLED
+            value: "0"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: cache
+            workspace: go-cache
+
+      - name: trivy-scan-amd64
+        timeout: 60m
+        retries: 0
+        runAfter:
+          - build-amd64
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: trivy-scanner
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: COMMAND
+            value: |
+              set -ex
+              trivy rootfs --scanners vuln \
+                --exit-code=1 \
+                --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
+                --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
+                ./trivy-$(params.artifact-version)-amd64
+        workspaces:
+          - name: source
+            workspace: source
+
+      - name: trivy-scan-arm64
+        timeout: 60m
+        retries: 0
+        runAfter:
+          - build-arm64
+
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: trivy-scanner
+            - name: version
+              value: '0.4'
+
+        params:
+          - name: COMMAND
+            value: |
+              set -ex
+              trivy rootfs --scanners vuln \
+                --exit-code=1 \
+                --db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-db \
+                --java-db-repository=registry.alauda.cn:60070/ops/aquasecurity/trivy-java-db \
+                ./trivy-$(params.artifact-version)-arm64
+        workspaces:
+          - name: source
+            workspace: source
+
+      - name: upload-to-nexus
+        runAfter:
+          - build-amd64
+          - build-arm64
+          - trivy-scan-amd64
+          - trivy-scan-arm64
+          - integration-test
+          - unit-test
+        timeout: 60m
+        retries: 3
+        taskRef:
+          resolver: hub
+          params:
+            - name: catalog
+              value: catalog
+            - name: kind
+              value: task
+            - name: name
+              value: run-script
+            - name: version
+              value: "0.1"
+
+        params:
+          - name: script
+            value: |
+              NEXUS_URL="https://build-nexus.alauda.cn"
+              REPOSITORY="alauda/devops/trivy-cli"
+              UPLOAD_PATH="$(params.git-revision)"
+              USERNAME=`cat $(workspaces.secret.path)/username`      
+              PASSWORD=`cat $(workspaces.secret.path)/password`
+              FILES=("trivy-$(params.artifact-version)-amd64" "trivy-$(params.artifact-version)-arm64")
+              RESULTS=()
+              
+              for file in "${FILES[@]}"; do
+                  if [[ -f "$file" ]]; then
+                      url="$NEXUS_URL/repository/$REPOSITORY/$UPLOAD_PATH/$file"
+                      echo "Uploading $file to $url ..."
+                      curl -u "$USERNAME:$PASSWORD" \
+                           --upload-file "$file" \
+                           $url
+                      RESULTS+=("$url")
+                      echo "Done: $file"
+                  else
+                      echo "File not found: $file"
+                      exit 1
+                  fi
+              done
+              
+              JSON_RESULT="[\"${RESULTS[0]}\""
+              for i in "${RESULTS[@]:1}"; do
+                JSON_RESULT+=",\"$i\""
+              done
+              JSON_RESULT+="]"
+              
+              echo "${JSON_RESULT}" > $(results.array-result.path)
+
+        workspaces:
+          - name: source
+            workspace: source
+          - name: secret
+            workspace: nexus-auth
+
+    workspaces:
+      - name: source
+        description: Workspace for shared code source
+      - name: dockerconfig
+        description: >-
+          Workspace for Docker configuration files, such as `config.json` or `.dockerconfigjson`.
+          This is optional and is used for authentication when pushing images to the registry.
+        # 该配置会触发 tekton pipeline 的 bug 导致 controller panic，所以先都设置为必填的。
+        # 详见: https://github.com/tektoncd/pipeline/issues/8561
+        # optional: true
+      - name: basic-auth
+        # optional: true
+        description: >
+          A Workspace containing a .gitconfig and .git-credentials file. These
+          will be copied to the user's home before any git commands are run. Any
+          other files in this Workspace are ignored. It is strongly recommended
+          to use ssh-directory over basic-auth whenever possible and to bind a
+          Secret to this Workspace over other volume types.
+      - name: gitversion-config
+        # optional: true
+        description: >
+          A Workspace containing a gitversion-config file. This file is used to set the git version.
+      - name: go-cache
+        persistentVolumeClaim:
+          claimName: build-cache
+        subPath: golang-nonroot
+      - name: trivy-test-image-cache
+        persistentVolumeClaim:
+          claimName: trivy-test-image-cache
+        subPath: trivy-test-image
+
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 5Gi
+    - name: dockerconfig
+      secret:
+        secretName: build-harbor.kauto.docfj
+    # This secret will be replaced by the pac controller
+    - name: basic-auth
+      secret:
+        secretName: "{{ git_auth_secret }}"
+    - name: nexus-auth
+      secret:
+        secretName: build-nexus.kauto
+    - name: gitversion-config
+      configMap:
+        name: gitversion-config
+    - name: sonar-credentials
+      secret:
+        secretName: sonarqube-credentials
+    - name: go-cache
+      persistentVolumeClaim:
+        claimName: build-cache
+      subPath: golang-nonroot
+    - name: trivy-test-image-cache
+      persistentVolumeClaim:
+        claimName: trivy-test-image-cache
+    - name: signkey
+      secret:
+        secretName: signing-secrets
+
+  taskRunTemplate:
+    # 让所有任务都以非 root 用户运行。
+    podTemplate:
+      securityContext:
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: "OnRootMismatch"
+
+  taskRunSpecs:
+    - pipelineTaskName: unit-test
+      computeResources:
+        limits:
+          cpu: "8"
+          memory: "8Gi"
+        requests:
+          cpu: "4"
+          memory: "4Gi"
+    - pipelineTaskName: integration-test
+      computeResources:
+        limits:
+          cpu: "8"
+          memory: "8Gi"
+        requests:
+          cpu: "4"
+          memory: "4Gi"
+    - pipelineTaskName: build-amd64
+      computeResources:
+        limits:
+          cpu: "4"
+          memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
+    - pipelineTaskName: build-arm64
+      computeResources:
+        limits:
+          cpu: "4"
+          memory: "4Gi"
+        requests:
+          cpu: "2"
+          memory: "2Gi"
