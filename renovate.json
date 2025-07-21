@@ -3,7 +3,7 @@
   "extends": [
     "github>AlaudaDevops/renovate-config:base"
   ],
-  "baseBranchPatterns": [
+  "baseBranches": [
     "/^alauda-v.*/"
   ],
   "postUpdateOptions": [
