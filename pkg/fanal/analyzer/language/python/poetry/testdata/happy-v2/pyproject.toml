@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "flask (==1.0.3)",
+    "flask (==2.2.5)",
     "pluggy (==0.13.1)"
 ]
 
