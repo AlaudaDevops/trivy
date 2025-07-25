@@ -27,7 +27,7 @@ jobs:
       - name: Generate Version
         id: generate_version
         run: |
-          # remove "-alauda-xxxx" suffix
+          # remove "alauda-" prefix
           GENERATED_VERSION=$(echo "${{ github.ref_name }}" | sed 's/alauda-//')
           echo "GENERATED_VERSION=$GENERATED_VERSION" >> $GITHUB_OUTPUT
 
