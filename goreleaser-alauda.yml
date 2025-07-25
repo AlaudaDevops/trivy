@@ -23,7 +23,7 @@ builds:
       - arm64
     ldflags:
       - -w -s -extldflags '-static'
-      - -X github.com/aquasecurity/trivy/pkg/version/app.ver={{ trimprefix .Version "alauda-" }}
+      - -X github.com/aquasecurity/trivy/pkg/version/app.ver={{.Env.GENERATED_VERSION}}
     main: ./cmd/trivy/
     binary: alauda-trivy
 
