@@ -497,3 +497,8 @@ tool (
 	golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 	sigs.k8s.io/kind
 )
+
+replace (
+	golang.org/x/tools => golang.org/x/tools v0.37.0
+	golang.org/x/tools/gopls => golang.org/x/tools/gopls v0.20.0
+)
