@@ -341,19 +341,13 @@ type Lint mg.Namespace
 // Run runs linters
 func (l Lint) Run() error {
 	mg.Deps(Tool{}.GolangciLint, Tool{}.Install)
-	if err := sh.RunV("golangci-lint", "run", "--build-tags=integration"); err != nil {
-		return err
-	}
-	return sh.RunV("modernize", "./...")
+	return sh.RunV("golangci-lint", "run", "--build-tags=integration")
 }
 
 // Fix auto fixes linters
 func (l Lint) Fix() error {
 	mg.Deps(Tool{}.GolangciLint, Tool{}.Install)
-	if err := sh.RunV("golangci-lint", "run", "--fix", "--build-tags=integration"); err != nil {
-		return err
-	}
-	return sh.RunV("modernize", "-fix", "./...")
+	return sh.RunV("golangci-lint", "run", "--fix", "--build-tags=integration")
 }
 
 // Fmt formats Go code

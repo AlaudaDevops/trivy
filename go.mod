@@ -453,7 +453,7 @@ require (
 	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
-	golang.org/x/tools/gopls v0.20.0 // indirect
+	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
 	google.golang.org/api v0.228.0 // indirect
 	google.golang.org/genproto v0.0.0-20250303144028-a0af3efb3deb // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251007200510-49b9836ed3ff // indirect
@@ -495,6 +495,5 @@ tool (
 	github.com/magefile/mage
 	github.com/twitchtv/twirp/protoc-gen-twirp
 	golang.org/x/tools/cmd/goyacc
-	golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 	sigs.k8s.io/kind
 )
