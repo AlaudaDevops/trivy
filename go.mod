@@ -1,6 +1,6 @@
 module github.com/aquasecurity/trivy
 
-go 1.25.4
+go 1.25.5
 
 require (
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
