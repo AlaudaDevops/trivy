@@ -21,7 +21,7 @@ require (
 	github.com/aquasecurity/go-version v0.0.1
 	github.com/aquasecurity/iamgo v0.0.10
 	github.com/aquasecurity/table v1.10.0
-	github.com/aquasecurity/testdocker v0.0.0-20240730042311-4642e94c7fc8
+	github.com/aquasecurity/testdocker v0.0.0-20250616060700-ba6845ac6d17
 	github.com/aquasecurity/tml v0.6.1
 	github.com/aquasecurity/trivy-checks v1.10.0
 	github.com/aquasecurity/trivy-db v0.0.0-20250227071930-8bd8a9b89e2d
