@@ -9,6 +9,9 @@
   "postUpdateOptions": [
     "gomodTidy"
   ],
+  "ignorePaths": [
+    "**/Dockerfile*"
+  ],
   "assignees": [
     "yuzichen12123"
   ]
