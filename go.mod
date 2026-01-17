@@ -392,7 +392,7 @@ require (
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.5 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/sigstore/cosign/v2 v2.2.4 // indirect
+	github.com/sigstore/cosign/v2 v2.6.2 // indirect
 	github.com/sigstore/protobuf-specs v0.5.0 // indirect
 	github.com/sigstore/sigstore v1.9.5 // indirect
 	github.com/sigstore/timestamp-authority v1.2.2 // indirect
