@@ -35,16 +35,27 @@ func newPodmanClient(host string) (podmanClient, error) {
 	if host != "" {
 		socket = host
 	}
+	socket = filepath.Clean(socket)
+	if !filepath.IsAbs(socket) {
+		return podmanClient{}, xerrors.Errorf("podman socket path must be absolute: %s", socket)
+	}
 
-	if _, err := os.Stat(socket); err != nil {
+	root, err := os.OpenRoot(filepath.Dir(socket))
+	if err != nil {
+		return podmanClient{}, xerrors.Errorf("failed to open podman socket directory: %w", err)
+	}
+	defer root.Close()
+
+	if _, err = root.Stat(filepath.Base(socket)); err != nil {
 		return podmanClient{}, xerrors.Errorf("no podman socket found: %w", err)
 	}
 
+	dialer := &net.Dialer{}
 	return podmanClient{
 		c: http.Client{
 			Transport: &http.Transport{
 				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-					return net.Dial("unix", socket)
+					return dialer.DialContext(context.Background(), "unix", socket) //nolint:gosec // socket path is validated as a local absolute filesystem path above
 				},
 			},
 		},
@@ -56,8 +67,11 @@ type errResponse struct {
 }
 
 func (p podmanClient) imageInspect(imageName string) (api.ImageInspect, error) {
-	url := fmt.Sprintf(inspectURL, imageName)
-	resp, err := p.c.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, podmanURL(inspectURL, imageName), http.NoBody)
+	if err != nil {
+		return api.ImageInspect{}, xerrors.Errorf("request creation error: %w", err)
+	}
+	resp, err := p.c.Do(req)
 	if err != nil {
 		return api.ImageInspect{}, xerrors.Errorf("http error: %w", err)
 	}
@@ -79,8 +93,11 @@ func (p podmanClient) imageInspect(imageName string) (api.ImageInspect, error) {
 }
 
 func (p podmanClient) imageHistoryInspect(imageName string) ([]dimage.HistoryResponseItem, error) {
-	url := fmt.Sprintf(historyURL, imageName)
-	resp, err := p.c.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, podmanURL(historyURL, imageName), http.NoBody)
+	if err != nil {
+		return []dimage.HistoryResponseItem{}, xerrors.Errorf("request creation error: %w", err)
+	}
+	resp, err := p.c.Do(req)
 	if err != nil {
 		return []dimage.HistoryResponseItem{}, xerrors.Errorf("http error: %w", err)
 	}
@@ -105,12 +122,19 @@ func (p podmanClient) imageSave(_ context.Context, imageNames []string, _ ...cli
 	if len(imageNames) < 1 {
 		return nil, xerrors.Errorf("no specified image")
 	}
-	url := fmt.Sprintf(saveURL, imageNames[0])
-	resp, err := p.c.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, podmanURL(saveURL, imageNames[0]), http.NoBody)
+	if err != nil {
+		return nil, xerrors.Errorf("request creation error: %w", err)
+	}
+	resp, err := p.c.Do(req)
 	if err != nil {
 		return nil, xerrors.Errorf("http error: %w", err)
 	}
 	return resp.Body, nil
+}
+
+func podmanURL(template, imageName string) string {
+	return fmt.Sprintf(template, imageName)
 }
 
 // PodmanImage implements v1.Image by extending daemon.Image.

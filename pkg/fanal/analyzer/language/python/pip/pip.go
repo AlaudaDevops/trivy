@@ -134,11 +134,28 @@ func (a pipLibraryAnalyzer) pkgLicense(pkgName, pkgVer, spDir string) []string {
 func (a pipLibraryAnalyzer) pythonSitePackagesDir() (string, error) {
 	// check VIRTUAL_ENV first
 	if venv := os.Getenv("VIRTUAL_ENV"); venv != "" {
-		libDir := filepath.Join(venv, "lib")
-		if _, err := os.Stat(libDir); os.IsNotExist(err) {
-			return "", xerrors.Errorf("unable to detect `lib` dir for %q venv: %w", venv, err)
+		venv = filepath.Clean(venv)
+		if !filepath.IsAbs(venv) {
+			absVenv, err := filepath.Abs(venv)
+			if err != nil {
+				return "", xerrors.Errorf("unable to resolve virtual environment path %q: %w", venv, err)
+			}
+			venv = absVenv
 		}
 
+		root, err := os.OpenRoot(venv)
+		if err != nil {
+			return "", xerrors.Errorf("unable to open virtual environment %q: %w", venv, err)
+		}
+		defer root.Close()
+
+		if _, err = root.Stat("lib"); os.IsNotExist(err) {
+			return "", xerrors.Errorf("unable to detect `lib` dir for %q venv: %w", venv, err)
+		} else if err != nil {
+			return "", xerrors.Errorf("unable to stat `lib` dir for %q venv: %w", venv, err)
+		}
+
+		libDir := filepath.Join(venv, "lib")
 		spDir, err := a.findSitePackagesDir(libDir)
 		if err != nil {
 			return "", xerrors.Errorf("unable to detect `site-packages` dir for %q venv: %w", spDir, err)

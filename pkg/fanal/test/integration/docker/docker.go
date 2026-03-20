@@ -3,7 +3,6 @@ package docker
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -30,15 +29,10 @@ func (c RegistryConfig) GetAuthConfig() apiregistry.AuthConfig {
 }
 
 func (c RegistryConfig) GetRegistryAuth() (string, error) {
-	authConfig := apiregistry.AuthConfig{
+	return apiregistry.EncodeAuthConfig(apiregistry.AuthConfig{
 		Username: c.Username,
 		Password: c.Password,
-	}
-	encodedJSON, err := json.Marshal(authConfig)
-	if err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(encodedJSON), nil
+	})
 }
 
 func (c RegistryConfig) GetBasicAuthorization() string {

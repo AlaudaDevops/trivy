@@ -116,6 +116,12 @@ func (m *Manager) loadModules(ctx context.Context) error {
 	}
 	log.Debug("Module dir", log.String("dir", m.dir))
 
+	root, err := os.OpenRoot(m.dir)
+	if err != nil {
+		return xerrors.Errorf("module root open error: %w", err)
+	}
+	defer root.Close()
+
 	err = filepath.Walk(m.dir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -129,7 +135,7 @@ func (m *Manager) loadModules(ctx context.Context) error {
 		}
 
 		log.Info("Reading a module...", log.String("path", rel))
-		wasmCode, err := os.ReadFile(path)
+		wasmCode, err := root.ReadFile(rel)
 		if err != nil {
 			return xerrors.Errorf("file read error: %w", err)
 		}

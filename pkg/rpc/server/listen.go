@@ -82,7 +82,7 @@ func (s Server) ListenAndServe(ctx context.Context, serverCache cache.Cache, ski
 				log.Debug("Server shutting down gracefully...")
 
 				// Give active requests time to complete
-				shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
 				if err := server.Shutdown(shutdownCtx); err != nil {
 					log.Errorf("Server shutdown error: %v", err)
 				}

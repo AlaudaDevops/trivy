@@ -265,10 +265,11 @@ func (f *Flag[T]) Add(cmd *cobra.Command) {
 				usage += fmt.Sprintf(" (allowed values: %s)", strings.Join(f.Values, ","))
 			} else {
 				// Display as a bullet list for many choices
-				usage += "\nAllowed values:"
+				lines := make([]string, 0, len(f.Values))
 				for _, val := range f.Values {
-					usage += fmt.Sprintf("\n  - %s", val)
+					lines = append(lines, "  - "+val)
 				}
+				usage += "\nAllowed values:\n" + strings.Join(lines, "\n")
 				if v != "" {
 					usage += "\n"
 				}
@@ -283,10 +284,11 @@ func (f *Flag[T]) Add(cmd *cobra.Command) {
 				usage += fmt.Sprintf(" (allowed values: %s)", strings.Join(f.Values, ","))
 			} else {
 				// Display as a bullet list for many choices
-				usage += "\nAllowed values:"
+				lines := make([]string, 0, len(f.Values))
 				for _, val := range f.Values {
-					usage += fmt.Sprintf("\n  - %s", val)
+					lines = append(lines, "  - "+val)
 				}
+				usage += "\nAllowed values:\n" + strings.Join(lines, "\n")
 				if len(v) != 0 {
 					usage += "\n"
 				}
@@ -629,7 +631,7 @@ func (f *Flags) AddFlags(cmd *cobra.Command) {
 }
 
 func (f *Flags) Usages(cmd *cobra.Command) string {
-	var usages string
+	var b strings.Builder
 	for _, group := range f.groups() {
 		flags := pflag.NewFlagSet(cmd.Name(), pflag.ContinueOnError)
 		lflags := cmd.LocalFlags()
@@ -643,10 +645,11 @@ func (f *Flags) Usages(cmd *cobra.Command) string {
 			continue
 		}
 
-		usages += fmt.Sprintf("%s Flags\n", group.Name())
-		usages += flags.FlagUsages() + "\n"
+		fmt.Fprintf(&b, "%s Flags\n", group.Name())
+		b.WriteString(flags.FlagUsages())
+		b.WriteByte('\n')
 	}
-	return strings.TrimSpace(usages)
+	return strings.TrimSpace(b.String())
 }
 
 func (f *Flags) Bind(cmd *cobra.Command) error {

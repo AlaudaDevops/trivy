@@ -2,6 +2,7 @@ package functions
 
 import (
 	"fmt"
+	"strings"
 )
 
 func ResourceID(args ...any) any {
@@ -9,13 +10,14 @@ func ResourceID(args ...any) any {
 		return nil
 	}
 
-	var resourceID string
+	var b strings.Builder
 
 	for _, arg := range args {
-		resourceID += "/" + fmt.Sprintf("%v", arg)
+		b.WriteByte('/')
+		fmt.Fprint(&b, arg)
 	}
 
-	return resourceID
+	return b.String()
 }
 
 func ExtensionResourceID(args ...any) any {
@@ -23,13 +25,14 @@ func ExtensionResourceID(args ...any) any {
 		return nil
 	}
 
-	var resourceID string
+	var b strings.Builder
 
 	for _, arg := range args {
-		resourceID += "/" + fmt.Sprintf("%v", arg)
+		b.WriteByte('/')
+		fmt.Fprint(&b, arg)
 	}
 
-	return resourceID
+	return b.String()
 }
 
 func ResourceGroup(_ ...any) any {
