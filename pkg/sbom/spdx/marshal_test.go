@@ -2,6 +2,7 @@ package spdx_test
 
 import (
 	"hash/fnv"
+	"strings"
 	"testing"
 	"time"
 
@@ -1460,10 +1461,14 @@ func TestMarshaler_Marshal(t *testing.T) {
 				var str string
 				switch vv := v.(type) {
 				case *core.Component:
-					str = vv.Name + vv.Version + vv.SrcFile
+					var b strings.Builder
+					b.WriteString(vv.Name)
+					b.WriteString(vv.Version)
+					b.WriteString(vv.SrcFile)
 					for _, f := range vv.Files {
-						str += f.Path
+						b.WriteString(f.Path)
 					}
+					str = b.String()
 				case spdx.OtherLicense:
 					str = vv.ExtractedText + vv.LicenseName
 				case string:

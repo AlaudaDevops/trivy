@@ -3,6 +3,7 @@ package terraform
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 )
@@ -90,29 +91,36 @@ func (r Reference) LogicalID() string {
 }
 
 func (r Reference) String() string {
-
-	base := r.typeLabel
+	var b strings.Builder
 	if r.nameLabel != "" {
-		base = fmt.Sprintf("%s.%s", base, r.nameLabel)
+		b.WriteString(r.typeLabel)
+		b.WriteByte('.')
+		b.WriteString(r.nameLabel)
+	} else {
+		b.WriteString(r.typeLabel)
 	}
 
 	if !r.blockType.removeTypeInReference {
-		base = r.blockType.Name()
+		b.Reset()
+		b.WriteString(r.blockType.Name())
 		if r.typeLabel != "" {
-			base += "." + r.typeLabel
+			b.WriteByte('.')
+			b.WriteString(r.typeLabel)
 		}
 		if r.nameLabel != "" {
-			base += "." + r.nameLabel
+			b.WriteByte('.')
+			b.WriteString(r.nameLabel)
 		}
 	}
 
-	base += r.KeyBracketed()
+	b.WriteString(r.KeyBracketed())
 
 	for _, rem := range r.remainder {
-		base += "." + rem
+		b.WriteByte('.')
+		b.WriteString(rem)
 	}
 
-	return base
+	return b.String()
 }
 
 func (r Reference) RefersTo(other Reference) bool {

@@ -64,7 +64,15 @@ func readSettings() settings {
 }
 
 func openSettings(filePath string) (settings, error) {
-	f, err := os.Open(filePath)
+	filePath = filepath.Clean(filePath)
+
+	root, err := os.OpenRoot(filepath.Dir(filePath))
+	if err != nil {
+		return settings{}, err
+	}
+	defer root.Close()
+
+	f, err := root.Open(filepath.Base(filePath))
 	if err != nil {
 		return settings{}, err
 	}

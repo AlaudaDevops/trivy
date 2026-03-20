@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -98,10 +99,17 @@ func (h *ColorHandler) appendAttr(buf []byte, a slog.Attr, groups []string) []by
 	}
 
 	var key string
-	for _, g := range groups {
-		key += g + "."
+	if len(groups) == 0 {
+		key = a.Key
+	} else {
+		var b strings.Builder
+		for _, g := range groups {
+			b.WriteString(g)
+			b.WriteByte('.')
+		}
+		b.WriteString(a.Key)
+		key = b.String()
 	}
-	key += a.Key
 
 	switch a.Value.Kind() {
 	case slog.KindString:

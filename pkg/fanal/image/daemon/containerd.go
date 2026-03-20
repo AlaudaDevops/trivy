@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -88,9 +89,21 @@ func ContainerdImage(ctx context.Context, imageName string, opts types.ImageOpti
 		// TODO: support rootless
 		addr = defaultContainerdSocket
 	}
+	addr = filepath.Clean(addr)
+	if !filepath.IsAbs(addr) {
+		return nil, cleanup, xerrors.Errorf("containerd socket path must be absolute: %s", addr)
+	}
 
-	if _, err := os.Stat(addr); errors.Is(err, os.ErrNotExist) {
+	root, err := os.OpenRoot(filepath.Dir(addr))
+	if err != nil {
+		return nil, cleanup, xerrors.Errorf("failed to open containerd socket directory: %w", err)
+	}
+	defer root.Close()
+
+	if _, err := root.Stat(filepath.Base(addr)); errors.Is(err, os.ErrNotExist) {
 		return nil, cleanup, xerrors.Errorf("containerd socket not found: %s", addr)
+	} else if err != nil {
+		return nil, cleanup, xerrors.Errorf("failed to stat containerd socket: %w", err)
 	}
 
 	ref, searchFilters, err := parseReference(imageName)
