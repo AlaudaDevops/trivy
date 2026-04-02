@@ -10,9 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
-	api "github.com/docker/docker/api/types"
-	dimage "github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
+	dimage "github.com/moby/moby/api/types/image"
+	"github.com/moby/moby/client"
 	"golang.org/x/xerrors"
 
 	xos "github.com/aquasecurity/trivy/pkg/x/os"
@@ -66,28 +65,28 @@ type errResponse struct {
 	Message string
 }
 
-func (p podmanClient) imageInspect(imageName string) (api.ImageInspect, error) {
+func (p podmanClient) imageInspect(imageName string) (dimage.InspectResponse, error) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, podmanURL(inspectURL, imageName), http.NoBody)
 	if err != nil {
-		return api.ImageInspect{}, xerrors.Errorf("request creation error: %w", err)
+		return dimage.InspectResponse{}, xerrors.Errorf("request creation error: %w", err)
 	}
 	resp, err := p.c.Do(req)
 	if err != nil {
-		return api.ImageInspect{}, xerrors.Errorf("http error: %w", err)
+		return dimage.InspectResponse{}, xerrors.Errorf("http error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		var res errResponse
 		if err = json.NewDecoder(resp.Body).Decode(&res); err != nil {
-			return api.ImageInspect{}, xerrors.Errorf("unknown status code from Podman: %d", resp.StatusCode)
+			return dimage.InspectResponse{}, xerrors.Errorf("unknown status code from Podman: %d", resp.StatusCode)
 		}
-		return api.ImageInspect{}, xerrors.New(res.Message)
+		return dimage.InspectResponse{}, xerrors.New(res.Message)
 	}
 
-	var inspect api.ImageInspect
+	var inspect dimage.InspectResponse
 	if err = json.NewDecoder(resp.Body).Decode(&inspect); err != nil {
-		return api.ImageInspect{}, xerrors.Errorf("unable to decode JSON: %w", err)
+		return dimage.InspectResponse{}, xerrors.Errorf("unable to decode JSON: %w", err)
 	}
 	return inspect, nil
 }
