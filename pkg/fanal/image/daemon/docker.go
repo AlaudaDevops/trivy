@@ -2,10 +2,11 @@ package daemon
 
 import (
 	"context"
+	"io"
 	"os"
 
-	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/moby/moby/client"
 	"golang.org/x/xerrors"
 
 	xos "github.com/aquasecurity/trivy/pkg/x/os"
@@ -70,8 +71,12 @@ func DockerImage(ref name.Reference, host string) (Image, func(), error) {
 	}
 
 	return &image{
-		opener:  imageOpener(context.Background(), imageID, f, c.ImageSave),
-		inspect: inspect,
-		history: configHistory(history),
+		opener: imageOpener(context.Background(), imageID, f,
+			func(ctx context.Context, imageIDs []string, saveOpts ...client.ImageSaveOption) (io.ReadCloser, error) {
+				return c.ImageSave(ctx, imageIDs, saveOpts...)
+			},
+		),
+		inspect: inspect.InspectResponse,
+		history: configHistory(history.Items),
 	}, cleanup, nil
 }
