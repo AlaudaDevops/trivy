@@ -60,9 +60,15 @@ func imageOpener(ctx context.Context, ref string, f *os.File, imageSave imageSav
 // To avoid entire loading, this wrapper uses ImageInspectWithRaw and checks image ID and layer IDs.
 type image struct {
 	v1.Image
-	opener  opener
+	opener opener
+	// inspect stores metadata fetched from the daemon inspect API.
 	inspect dimage.InspectResponse
+	// history stores metadata fetched from the daemon history API.
 	history []v1.History
+	// container stores the legacy container ID from inspect raw payload.
+	container string
+	// dockerVersion stores the daemon version from inspect raw payload.
+	dockerVersion string
 }
 
 // populateImage initializes an "image" struct.
@@ -125,12 +131,14 @@ func (img *image) ConfigFile() (*v1.ConfigFile, error) {
 	}
 
 	return &v1.ConfigFile{
-		Architecture: img.inspect.Architecture,
-		Author:       img.inspect.Author,
-		Created:      created,
-		Config:       img.imageConfig(lo.FromPtr(img.inspect.Config)),
-		History:      img.history,
-		OS:           img.inspect.Os,
+		Architecture:  img.inspect.Architecture,
+		Author:        img.inspect.Author,
+		Container:     img.container,
+		Created:       created,
+		DockerVersion: img.dockerVersion,
+		Config:        img.imageConfig(lo.FromPtr(img.inspect.Config)),
+		History:       img.history,
+		OS:            img.inspect.Os,
 		RootFS: v1.RootFS{
 			Type:    img.inspect.RootFS.Type,
 			DiffIDs: diffIDs,
