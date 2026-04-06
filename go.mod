@@ -523,3 +523,5 @@ tool (
 )
 
 replace github.com/sigstore/timestamp-authority => github.com/alaudadevops/timestamp-authority v1.2.10-alauda.1
+
+replace github.com/docker/docker => github.com/moby/moby v28.5.3-0.20260325154711-31a1689cb0a1+incompatible
