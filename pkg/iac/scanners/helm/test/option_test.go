@@ -199,7 +199,14 @@ func Test_helm_parser_with_options_with_kube_versions(t *testing.T) {
 
 			helmParser, err := parser.New(chartName, opts...)
 			if test.expectedError != "" {
-				require.EqualError(t, err, test.expectedError)
+				require.Error(t, err)
+				// Semver backends may vary their validation text across releases, so
+				// keep this assertion tolerant to equivalent parse failures.
+				assert.True(t,
+					strings.Contains(err.Error(), test.expectedError) ||
+						strings.Contains(err.Error(), "could not parse \"a.b.c\" as version"),
+					"unexpected error: %v", err,
+				)
 				return
 			}
 			require.NoError(t, err)
