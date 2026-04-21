@@ -15,12 +15,8 @@ builds:
     goos:
       - linux
     goarch:
-      - 386
-      - arm
       - amd64
       - arm64
-      - s390x
-      - ppc64le
     goarm:
       - 7
   - id: build-bsd
