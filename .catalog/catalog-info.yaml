@@ -1,0 +1,45 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: trivy
+  title: Trivy
+  description: Trivy 是 Aqua Security 开源的全面漏洞扫描工具，支持容器镜像、文件系统和 Git 仓库的安全扫描。被 Tekton 流水线（镜像安全扫描任务）和 Harbor（内置镜像扫描）等多个产品共同使用。
+  tags:
+    - security
+    - scanning
+    - open-source-fork
+  links:
+    - url: https://github.com/AlaudaDevops/trivy
+      title: GitHub Repository
+      icon: github
+    - url: https://build-sonar.alauda.cn/dashboard?id=github.com-AlaudaDevops-trivy
+      title: SonarQube
+      icon: dashboard
+    - url: https://github.com/aquasecurity/trivy
+      title: Upstream Repository
+      icon: github
+  annotations:
+    # github plugin
+    github.com/project-slug: AlaudaDevops/trivy
+    # sonarqube plugin
+    sonarqube.org/project-key: github.com-AlaudaDevops-trivy
+    # 开源组件代码仓库地址，格式：${url}/${project}/${repo}
+    acp.cpaas.io/open-source-component-repo: https://github.com/aquasecurity/trivy
+    # 开源组件的版本信息，只适用于开源组件，自研组件默认不收集版本信息,格式 ${version}
+    acp.cpaas.io/open-source-component-version: v0.65.1
+    # 开源组件的license信息,格式 ${license}
+    acp.cpaas.io/open-source-component-license: Apache
+    # 开源组件的license地址,格式 ${url}/${project}/${repo}/${license-path}
+    acp.cpaas.io/open-source-component-license_url: https://github.com/aquasecurity/trivy/blob/main/LICENSE
+    # backstage techdocs plugin
+    backstage.io/techdocs-ref: dir:../
+    acp.cpaas.io/owner: qingliu@alauda.io
+
+    # 组件属性，区别是否部署时必带的核心组件,可选值为 core 和 plugin。
+    acp.cpaas.io/functional-attributes: plugin
+
+spec:
+  type: service
+  system: system:alauda-devops-system
+  lifecycle: production
+  owner: devops
