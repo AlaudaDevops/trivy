@@ -33,9 +33,9 @@ var (
 			},
 		},
 		{
-			ID:           "stdlib@v1.22.5",
+			ID:           "stdlib@v1.26.3",
 			Name:         "stdlib",
-			Version:      "v1.22.5",
+			Version:      "v1.26.3",
 			Relationship: ftypes.RelationshipDirect,
 		},
 		{
@@ -87,7 +87,7 @@ var (
 			ID: "github.com/org/repo",
 			DependsOn: []string{
 				"github.com/aquasecurity/go-version@v0.0.0-20240603093900-cf8a8d29271d",
-				"stdlib@v1.22.5",
+				"stdlib@v1.26.3",
 			},
 		},
 	}
