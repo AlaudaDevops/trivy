@@ -165,7 +165,11 @@ linters:
     - unused
     - usestdlibvars
     - usetesting
-    - modernize
+    # `modernize` reads go.mod's go directive directly; with our fork on
+    # 1.26.3 it triggers rules (e.g. ToPtr -> new) that upstream code hasn't
+    # been refactored for. Re-enable once upstream lands the same toolchain
+    # bump and modernizes the codebase.
+    # - modernize
 
   exclusions:
     generated: lax
