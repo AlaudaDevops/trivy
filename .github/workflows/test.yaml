@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        operating-system: [ubuntu-latest, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -218,7 +218,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        operating-system: [ubuntu-latest, ubuntu-24.04-arm]
     env:
       DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
@@ -241,23 +241,16 @@ jobs:
     - name: Set up Go
       uses: ./.github/actions/setup-go
 
-    - name: Determine GoReleaser ID
-      id: goreleaser_id
-      shell: bash
-      run: |
-        if [ "${{ matrix.operating-system }}" == "windows-latest" ]; then
-          echo "id=--id build-windows" >> $GITHUB_OUTPUT
-        elif [ "${{ matrix.operating-system }}" == "macos-latest" ]; then
-          echo "id=--id build-macos --id build-bsd" >> $GITHUB_OUTPUT
-        else
-          echo "id=--id build-linux" >> $GITHUB_OUTPUT
-        fi
-
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
       with:
         version: v2.1.0
-        args: build --snapshot --clean --timeout 90m ${{ steps.goreleaser_id.outputs.id }}
+        # Build against the Alauda goreleaser config so CI exercises only the
+        # archs we actually ship (linux amd64 + arm64), not all of upstream's
+        # build-linux targets (386 / arm/7 / s390x / ppc64le).
+        args: build --snapshot --clean --timeout 90m -f goreleaser-alauda.yml
+      env:
+        GENERATED_VERSION: snapshot
 
   # This job intentionally runs on all PRs (not scoped to .github/ path changes)
   # to keep all checks in one place. The scan itself is scoped to .github/ via the action input.
