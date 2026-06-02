@@ -1,0 +1,23 @@
+# Trivy ignore list for the Alauda trivy fork.
+#
+# Each entry must include: CVE id, why it is ignored, and a re-check trigger.
+# Remove entries once the underlying package can be upgraded to a clean version.
+
+# CVE-2026-34040 (HIGH) - Moby AuthZ plugin bypass with oversized request body.
+# CVE-2026-33997 (MEDIUM) - Related Moby CVE flagged on the same pseudo-version.
+#
+# Both advisories declare the fixed version as Docker Engine 29.3.1, which only
+# exists on the new `github.com/moby/moby/v2` module path. This branch already
+# uses `github.com/docker/docker` at `github.com/moby/moby` 28.x HEAD
+# (`v28.5.3-0.20260325154711-31a1689cb0a1+incompatible`), which already contains
+# the upstream AuthZ backport commits (`pkg/authz: Reject requests exceeding
+# body size limit`, `pkg/authz: Increase body limit to 4 MiB`,
+# `plugin: Fix off-by-one in privilege validation`). The scanner cannot tell
+# from the pseudo-version string that the fix is included, so it keeps the
+# advisories open.
+#
+# Re-check trigger: drop these entries once a tagged `v28.5.3+` release lands
+# on `github.com/moby/moby` 28.x, or once this fork migrates to the
+# `github.com/moby/moby/v2` module path with a >=29.3.1 release.
+CVE-2026-34040
+CVE-2026-33997
