@@ -113,12 +113,12 @@ require (
 	github.com/zclconf/go-cty v1.18.0
 	github.com/zclconf/go-cty-yaml v1.2.0
 	go.etcd.io/bbolt v1.4.3
-	golang.org/x/crypto v0.50.0
+	golang.org/x/crypto v0.52.0
 	golang.org/x/mod v0.35.0
-	golang.org/x/net v0.53.0
+	golang.org/x/net v0.54.0
 	golang.org/x/sync v0.20.0
-	golang.org/x/term v0.42.0
-	golang.org/x/text v0.36.0
+	golang.org/x/term v0.43.0
+	golang.org/x/text v0.37.0
 	golang.org/x/tools v0.44.0
 	golang.org/x/vuln v1.1.4
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
@@ -469,7 +469,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260409153401-be6f6cb8b1fa // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/api v0.272.0 // indirect
