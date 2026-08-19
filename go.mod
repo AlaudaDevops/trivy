@@ -43,7 +43,7 @@ require (
 	github.com/docker/cli v29.4.0+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/fatih/color v1.19.0
-	github.com/go-git/go-git/v5 v5.19.1
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/gocsaf/csaf/v3 v3.5.1
@@ -114,12 +114,12 @@ require (
 	github.com/zclconf/go-cty-yaml v1.2.0
 	go.etcd.io/bbolt v1.4.3
 	golang.org/x/crypto v0.53.0
-	golang.org/x/mod v0.36.0
-	golang.org/x/net v0.55.0
+	golang.org/x/mod v0.37.0
+	golang.org/x/net v0.56.0
 	golang.org/x/sync v0.21.0
 	golang.org/x/term v0.44.0
-	golang.org/x/text v0.38.0
-	golang.org/x/tools v0.45.0
+	golang.org/x/text v0.39.0
+	golang.org/x/tools v0.47.0
 	golang.org/x/vuln v1.1.4
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	google.golang.org/protobuf v1.36.11
@@ -470,7 +470,7 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260508192327-42602be52be6 // indirect
+	golang.org/x/telemetry v0.0.0-20260625142307-59b4966ccb57 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/api v0.272.0 // indirect
 	google.golang.org/genproto v0.0.0-20260316180232-0b37fe3546d5 // indirect
