@@ -2,7 +2,7 @@ module github.com/org/repo
 
 go 1.22.0
 
-toolchain go1.26.3
+toolchain go1.26.8
 
 require github.com/aquasecurity/go-version v0.0.0-20240603093900-cf8a8d29271d
 
