@@ -21,7 +21,6 @@ import (
 	"github.com/aquasecurity/trivy/pkg/log"
 	"github.com/aquasecurity/trivy/pkg/utils/fsutils"
 	xos "github.com/aquasecurity/trivy/pkg/x/os"
-	xslices "github.com/aquasecurity/trivy/pkg/x/slices"
 )
 
 const configFile = "plugin.yaml"
