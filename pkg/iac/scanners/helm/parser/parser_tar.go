@@ -11,6 +11,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"helm.sh/helm/v3/pkg/chart/loader"
+
 	"github.com/aquasecurity/trivy/pkg/iac/detection"
 	"github.com/aquasecurity/trivy/pkg/log"
 	"github.com/aquasecurity/trivy/pkg/mapfs"
@@ -40,6 +42,11 @@ func (p *Parser) unpackArchive(srcFS fs.FS, targetFS *mapfs.FS, archivePath stri
 
 	checkExistedChart := true
 	symlinks := make(map[string]string)
+
+	// Bound how much the archive is allowed to decompress to. Without this a small
+	// crafted .tgz can expand to gigabytes and OOM the scanner. The limits are the
+	// Helm SDK's own, so a chart Helm would refuse to load is refused here too.
+	remainingSize := loader.MaxDecompressedChartSize
 
 	for {
 		header, err := tr.Next()
@@ -71,10 +78,22 @@ func (p *Parser) unpackArchive(srcFS fs.FS, targetFS *mapfs.FS, archivePath stri
 				return err
 			}
 		case tar.TypeReg:
-			data, err := io.ReadAll(tr)
+			if header.Size > loader.MaxDecompressedFileSize {
+				return fmt.Errorf("decompressed chart file %q is larger than the maximum file size %d",
+					name, loader.MaxDecompressedFileSize)
+			}
+
+			// Read at most the remaining budget plus one byte, so an entry whose real
+			// size exceeds the header (or the budget) is detected rather than trusted.
+			data, err := io.ReadAll(io.LimitReader(tr, remainingSize+1))
 			if err != nil {
 				return fmt.Errorf("read file: %w", err)
 			}
+			if int64(len(data)) > remainingSize {
+				return fmt.Errorf("decompressed chart is larger than the maximum size %d",
+					loader.MaxDecompressedChartSize)
+			}
+			remainingSize -= int64(len(data))
 
 			p.logger.Debug("Unpacking tar entry", log.FilePath(targetPath))
 			if err := writeFile(targetFS, data, targetPath); err != nil {
