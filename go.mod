@@ -1,5 +1,8 @@
 module github.com/aquasecurity/trivy
 
+// Modified by Alauda on 2026-10-14: Go version and dependency versions raised for security fixes
+// (DEVOPS-44747); go.sum updated to match.
+
 go 1.26.9
 
 require (
