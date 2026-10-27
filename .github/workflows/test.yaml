@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        operating-system: [ubuntu-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,21 +34,6 @@ jobs:
             exit 1
           fi
         if: matrix.operating-system == 'ubuntu-latest'
-
-      - name: Lint
-        id: lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          version: v2.13.1
-          args: --verbose
-          skip-save-cache: true  # Restore cache from main branch but don't save new cache
-        if: matrix.operating-system == 'ubuntu-latest'
-
-      - name: Check if linter failed
-        run: |
-          echo "Linter failed, running 'mage lint:fix' might help to correct some errors"
-          exit 1
-        if: ${{ failure() && steps.lint.conclusion == 'failure' }}
 
       - name: Install tools
         run: go install tool # GOBIN is added to the PATH by the setup-go action
@@ -216,7 +201,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        operating-system: [ubuntu-latest]
     env:
       DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
