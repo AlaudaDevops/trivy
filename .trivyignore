@@ -1,0 +1,21 @@
+# Trivy ignore list for the Alauda trivy fork.
+#
+# Each entry must include: CVE id, why it is ignored, and a re-check trigger.
+# Remove entries once the underlying package can be upgraded to a clean version.
+
+# github.com/docker/docker (pinned at v28.5.2+incompatible) and github.com/docker/distribution
+# (v2.8.3+incompatible) are reported with no fixed version, or with a fix that only exists on the
+# new github.com/moby/moby/v2 module path (CVE-2026-33997 is fixed in 29.3.1 there).
+#   CVE-2026-33997  MEDIUM  fixed only in github.com/moby/moby/v2 29.3.1
+#   CVE-2026-41567  HIGH    no fixed version published
+#   CVE-2026-41568  MEDIUM  no fixed version published
+#   CVE-2026-42306  HIGH    no fixed version published
+#   CVE-2026-85747  MEDIUM  github.com/docker/distribution, no fixed version published
+#
+# Re-check trigger: drop an entry once a clean release is available for the module, or once this
+# fork migrates to the github.com/moby/moby/v2 module path with a release >= 29.3.1.
+CVE-2026-33997
+CVE-2026-41567
+CVE-2026-41568
+CVE-2026-42306
+CVE-2026-85747
